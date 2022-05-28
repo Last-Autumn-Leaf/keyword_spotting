@@ -16,6 +16,7 @@ from models.M5 import M5
 from utilsFunc import *
 
 
+
 def main():
     def train(model, epoch, log_interval):
         model.train()
