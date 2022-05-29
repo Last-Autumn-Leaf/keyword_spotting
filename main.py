@@ -19,16 +19,6 @@ from utilsFunc import *
 
 def main():
 
-
-    '''def predict(tensor):
-        # Use the model to predict the label of the waveform
-        tensor = tensor.to(device)
-        tensor = transform(tensor)
-        tensor = model(tensor.unsqueeze(0))
-        tensor = metrics.get_likely_index(tensor)
-        tensor = metrics.index_to_label(tensor.squeeze())
-        return tensor'''
-
     storage=dict()
 
     storage['device'] = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -43,16 +33,16 @@ def main():
 
     #Resampling :
     waveform_size=resample(storage,new_sample_rate=8000)
-    batch_size = 256
 
+
+    # setting up the LOADER
+    batch_size = 256
     if storage['device'] == "cuda":
         num_workers = 1
         pin_memory = True
     else:
         num_workers = 0
         pin_memory = False
-
-    # setting up the LOADER
     storage['train_loader']  = torch.utils.data.DataLoader(
         train_set,
         batch_size=batch_size,

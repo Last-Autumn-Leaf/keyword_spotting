@@ -124,10 +124,10 @@ def test(storage):
 
 
 def showResult(model):
-    FirstLayerWeights = model.conv1.weight.detach().numpy()
+    FirstLayerWeights = model.conv1.weight.detach().cpu().numpy()
     plot_kernels1D(FirstLayerWeights)
     plot_kernels1D(FirstLayerWeights, True)
-    SecondLayerWeights =model.conv2.weight.detach().numpy()
+    SecondLayerWeights =model.conv2.weight.detach().cpu().numpy()
     plot_kernels1D(SecondLayerWeights)
     plot_kernels1D(SecondLayerWeights, True)
 
