@@ -62,9 +62,7 @@ class SubsetSC(SPEECHCOMMANDS):
 
         return tensors, targets
 
-def resample(storage,new_sample_rate = 8000):
-    storage['transform'] = torchaudio.transforms.Resample(orig_freq=storage['sample_rate'], new_freq=new_sample_rate)
-    return storage['transform'](storage['waveform']).shape[0]
+
 
 if __name__=='__main__':
     train_set = SubsetSC("training")
