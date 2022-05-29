@@ -4,8 +4,8 @@ import os
 import torch
 
 class SubsetSC(SPEECHCOMMANDS):
-    def __init__(self, subset: str = None):
-        super().__init__("./", download=True)
+    def __init__(self, subset: str = None,root ="./"):
+        super().__init__(root, download=True)
 
 
         def load_list(filename):
