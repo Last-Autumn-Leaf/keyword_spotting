@@ -7,8 +7,6 @@ class mel_model(nn.Module):
     def __init__(self, input_shape, n_channel=64,n_output=35):
         super().__init__()
 
-        x=int(input_shape[-2] /5)
-        y=int(input_shape[-1] /5)
         self.dropout=nn.Dropout(0.5)
         self.conv1 = nn.Sequential( nn.Conv2d(1, n_channel, kernel_size=(20,8), stride=(1,3)),
                                     nn.ReLU(),
@@ -35,7 +33,9 @@ class mel_model(nn.Module):
         x=self.flatten(x)
 
         x=self.fc1 (x)
+        x = F.relu(x)
         x=self.fc2 (x)
+        x = F.relu(x)
         x=self.dropout(x)
         x=self.fc3 (x)
         return F.log_softmax(x,dim=-1)

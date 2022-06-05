@@ -74,45 +74,61 @@ def plot_kernels1D(tensor,FFT=False,fe=8000,plotName=False):
       a.set_title('kernel'+str(i))
   plt.show()
 
+def plot_kernels2D(tensor,plotName=False,transpose=False):
 
-def train(storage):
-    storage['model'].train()
-    for batch_idx, (data, target) in enumerate(storage['train_loader']):
+  if not tensor.ndim==4:
+      raise Exception("assumes a 4D tensor")
+  num_kernels = tensor.shape[0]
+  sep=int(np.ceil(np.sqrt(num_kernels)))
+  fig = plt.figure(figsize=(sep, sep),dpi=500)
+  for i in range(num_kernels):
+    a=fig.add_subplot(sep, sep, i+1)
+    a.imshow(tensor[i,0].T if transpose else tensor[i,0])
+    a.axis('off')
+    if plotName:
+      a.set_title('kernel'+str(i))
+  plt.show()
+
+
+def train(storage,exp_i=0):
+    storage['model'][exp_i].train()
+    for batch_idx, (data, target) in enumerate(storage['train_loader'][exp_i]):
 
         data = data.to(storage['device'])
         target = target.to(storage['device'])
 
         # apply transform and model on whole batch directly on device
-        data = storage['transform'](data)
-        output = storage['model'](data)
+        data = storage['transform'][exp_i](data)
+        output = storage['model'][exp_i](data)
 
         # negative log-likelihood for a tensor of size (batch x 1 x n_output)
         loss = storage['lossFunc'](output.squeeze(), target)
 
-        storage['optimizer'].zero_grad()
+        storage['optimizer'][exp_i].zero_grad()
         loss.backward()
-        storage['optimizer'].step()
+        storage['optimizer'][exp_i].step()
 
         # print training stats
-        if batch_idx % storage['log_interval'] == 0:
+        if batch_idx % storage['log_interval'][exp_i] == 0:
             print(
-                f"Train Epoch: {storage['n_epoch']} [{batch_idx * len(data)}/{len(storage['train_loader'].dataset)} ({100. * batch_idx / len(storage['train_loader']):.0f}%)]\tLoss: {loss.item():.6f}")
+                f"Train Epoch: {storage['epoch']} [{batch_idx * len(data)}/{len(storage['train_loader'][exp_i].dataset)}"
+                f" ({100. * batch_idx / len(storage['train_loader'][exp_i]):.0f}%)]\tLoss: {loss.item():.6f}")
 
         # update progress bar
-        storage['pbar'].update(storage['pbar_update'])
+        storage['pbar'].update(storage['pbar_update'][exp_i])
         # record loss
-        storage['losses'].append(loss.item())
+        storage['losses_train'][storage['model'][exp_i]].append(loss.item())
 
-def test(storage):
-    storage['model'].eval()
+def validation(storage,exp_i=0):
+    storage['model'][exp_i].eval()
     correct = 0
-    for data, target in storage['test_loader']:
+    for data, target in storage['validation_loader'][exp_i]:
         data = data.to(storage['device'])
         target = target.to(storage['device'])
 
         # apply transform and model on whole batch directly on device
-        data = storage['transform'](data)
-        output = storage['model'](data)
+        data = storage['transform'][exp_i](data)
+        output = storage['model'][exp_i](data)
 
         correct += storage['metrics'](output,target)
 
@@ -120,7 +136,10 @@ def test(storage):
         storage['pbar'].update(storage['pbar_update'])
 
     print(
-        f"\nTest Epoch: {storage['n_epoch']}\tAccuracy: {correct}/{len(storage['test_loader'].dataset)} ({100. * correct / len(storage['test_loader'].dataset):.0f}%)\n")
+        f"\nTest Epoch: {storage['epoch']}\tAccuracy: {correct}/{len(storage['validation_loader'][exp_i].dataset)} "
+        f"({100. * correct / len(storage['validation_loader'][exp_i].dataset):.0f}%)\n")
+
+
 
 
 def showResult(model):
@@ -131,7 +150,7 @@ def showResult(model):
     plot_kernels1D(SecondLayerWeights)
     plot_kernels1D(SecondLayerWeights, True)
 
-
+currentOrLast = lambda c,lst: c if c <len(lst) else -1
 if __name__=='__main__':
     with timeThat() :
         print('hello')
