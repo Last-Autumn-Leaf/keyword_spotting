@@ -75,6 +75,8 @@ def plot_kernels1D(tensor,FFT=False,fe=8000,plotName=False):
   plt.show()
 
 def plot_kernels2D(tensor,plotName=False,transpose=False):
+  if tensor.ndim==3 :
+      tensor=tensor[:,None,:]
 
   if not tensor.ndim==4:
       raise Exception("assumes a 4D tensor")
