@@ -280,6 +280,8 @@ def main():
                             torch.save(storage['model'][exp_i].state_dict(),
                                        args.exp_name + '/' + args.save_checkpoint[
                                            currentOrLast(exp_i, args.save_checkpoint)])
+                            print('saving model',args.exp_name + '/' + args.save_checkpoint[
+                                           currentOrLast(exp_i, args.save_checkpoint)])
                     else :
                         test(storage,exp_i)
 
@@ -295,6 +297,7 @@ def main():
                     savename = args.save_checkpoint[currentOrLast(exp_i, args.save_checkpoint)] if args.save_checkpoint else \
                         args.model[exp_i]+'_'+str(exp_i)
                     plt.savefig(args.exp_name + '/' +savename+'.png' )
+                    print('saving plot :',args.exp_name + '/' +savename+'.png' )
                 if not args.noshowplot :
                     plt.show()
 

@@ -16,7 +16,7 @@ class spectrogram_model(nn.Module):
         self.conv2 = nn.Conv2d(n_channel, n_channel, kernel_size=(x,y))
         self.dropout=nn.Dropout(0.5)
         self.flatten=nn.Flatten()
-        self.fc1 = nn.Linear(161024, int(n_channel/2))
+        self.fc1 = nn.Linear(151552, int(n_channel/2))
         self.fc2 = nn.Linear(int(n_channel/2), n_channel*2)
         self.fc3 = nn.Linear(2 * n_channel, n_output)
 
