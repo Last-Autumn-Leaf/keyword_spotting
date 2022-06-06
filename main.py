@@ -279,9 +279,9 @@ def main():
                         if args.save_checkpoint and best_model_stats < storage['accuracy']:
                             torch.save(storage['model'][exp_i].state_dict(),
                                        args.exp_name + '/' + args.save_checkpoint[
-                                           currentOrLast(exp_i, args.save_checkpoint)])
+                                           currentOrLast(exp_i, args.save_checkpoint)] +'.pt')
                             print('saving model',args.exp_name + '/' + args.save_checkpoint[
-                                           currentOrLast(exp_i, args.save_checkpoint)])
+                                           currentOrLast(exp_i, args.save_checkpoint)]+'.pt')
                     else :
                         test(storage,exp_i)
 
