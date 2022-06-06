@@ -8,11 +8,19 @@ import IPython.display as ipd
 from tqdm import tqdm
 import metrics.metrics as metrics
 from dataset.subsetSC import SubsetSC
+#import models
 from models.spectrogram_model import spectrogram_model
+from models.mel_model import *
+from models.M5 import *
+
 from utilsFunc import *
 import argparse
+from os import makedirs
 print('imports done')
-
+spect_model='spect'
+M5_model='M5'
+MEL_MODEL='mel'
+new_sample_rate=8000
 
 def argument_parser():
     """
@@ -20,13 +28,14 @@ def argument_parser():
         datasets and differents parameters
     """
     parser = argparse.ArgumentParser(usage="\n python3 main.py [model] [hyper_parameters]"
-                                           "\n python3 main.py --model M5 [hyper_parameters]",
+                                           "\n python3 main.py --model M5 [hyper_parameters]"
+                                            "\n python3 main.py [model] --predict [load_checkpoint]",
                                      description="This program allows to train different models of classification.")
 
     parser.add_argument("--exp_name", type=str,default="nameless_exp",
                         help="Name of experiment")
-    parser.add_argument("--model", type=str, nargs="+", default="spectrogram_model",
-                        choices=["M5", "spectrogram_model", "mel_model"])
+    parser.add_argument("--model", type=str, nargs="+", default=spect_model,
+                        choices=[M5_model, spect_model, MEL_MODEL])
     parser.add_argument("--batch_size", nargs="+", type=int, default=100,
                         help="The size of the training batch. Accepts multiple space-seperated values for hyperparameter search (--batch_size 5 10 20)")
     parser.add_argument("--optimizer", type=str, default="Adam", choices=["Adam", "SGD"],
@@ -48,7 +57,7 @@ def argument_parser():
     #parser.add_argument("--data_aug", action="store_true",help="Data augmentation")
     parser.add_argument("--predict", action="store_true",
                         help="Load weights to predict the mask of a randomly selected image from the test set")
-    parser.add_argument("--log_interval", nargs="+", type=int, default=20,
+    parser.add_argument("--log_interval", type=int, default=20,
                         help="The log interval of the training batch. Accepts multiple space-seperated values for hyperparameter search (--log_interval 5 10 20)")
     parser.add_argument("--load_checkpoint", nargs="+", type=str,
                         help="Location of a training checkpoint to load")
@@ -70,6 +79,10 @@ def argument_parser():
     parser.add_argument("--n_fft", type=int, default=parser.parse_args().win_length,
                         help="n_fft")
 
+    parser.add_argument("--noshowplot", action="store_true",
+                        help="don't show plot")
+    parser.add_argument("--nosaveplot", action="store_true",
+                        help="don't save plot")
     return parser.parse_args()
 
 
@@ -90,15 +103,13 @@ def main():
         args.step_size=[args.step_size]
     if isinstance( args.gamma,float) :
         args.gamma=[args.gamma]
-    if isinstance(args.log_interval,int) :
-        args.log_interval=[args.log_interval]
+
 
     if isinstance(args.load_checkpoint,str) :
         args.load_checkpoint=[args.load_checkpoint]
     if isinstance(args.save_checkpoint,str) :
         args.save_checkpoint=[args.save_checkpoint]
-    if isinstance(args.log_interval,int) :
-        args.log_interval=[args.log_interval]
+
 
 
     # We use a dictionnary to stored usefull variables.
@@ -130,20 +141,20 @@ def main():
                         collate_fn=train_set.collate_fn,
                         num_workers=num_workers,
                         pin_memory=pin_memory,) )
-                print('training loader set up')
+                print('training loader set up, size',len(train_set))
             if not args.no_validation :
                 if 'val_set' not in locals():
                     val_set = SubsetSC("validation", root)
-                    storage['validation_loader']=[]
+                    storage['val_loader']=[]
                     for batch_size in args.batch_size:
-                        storage['validation_loader'].append(torch.utils.data.DataLoader(
+                        storage['val_loader'].append(torch.utils.data.DataLoader(
                             val_set,
                             batch_size=batch_size,
                             shuffle=True,
                             collate_fn=train_set.collate_fn,
                             num_workers=num_workers,
                             pin_memory=pin_memory, ))
-                    print('validation loader set up')
+                    print('validation loader set up, size',len(val_set))
             storage['waveform'], storage['sample_rate'], label, speaker_id, utterance_number = train_set[0]
     else : # PREDICTION MODE
         print('Prediction mode')
@@ -159,6 +170,9 @@ def main():
                         collate_fn=test_set.collate_fn,
                         num_workers=num_workers,
                         pin_memory=pin_memory, ))
+                print('test loader set up, size', len(test_set))
+            storage['waveform'], storage['sample_rate'], label, speaker_id, utterance_number = test_set[0]
+
 
     batch_size = args.batch_size
     num_epochs = args.num_epochs
@@ -177,22 +191,31 @@ def main():
     storage['model']=[]
     c=0
     for model in args.model :
-        if model == 'M5' :
-            raise Exception(model + " not implemented")
-        elif model == 'spectrogram_model':
+        if model == M5_model :
+            M5_transform = torchaudio.transforms.Resample(orig_freq=storage['sample_rate'], new_freq=new_sample_rate)
+            storage['transform'].append(M5_transform)
+            waveform_size = storage['transform'][-1](storage['waveform']).shape
+            storage['model'].append(M5( n_output=len(test_set.labels if args.predict else train_set.labels)) )
+            storage['model'][-1].to(storage['device'])
+        elif model == spect_model:
             #setting up the correct transform
             storage['transform'].append(torchaudio.transforms.Spectrogram(n_fft=n_fft,win_length=win_length,hop_length=hop_length))
 
             # setting up the model
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'] .append( spectrogram_model(input_shape=waveform_size, n_output=len(train_set.labels if not args.predict else test_set.labels)) )
-
-            # try to load a model if the list is not empty
-            if args.load_checkpoint:
-                storage['model'][-1].load_state_dict(torch.load(args.load_checkpoint[currentOrLast(c,args.load_checkpoint)]))
             storage['model'][-1].to(storage['device'])
-        elif model == 'mel_model' :
-            raise Exception(model + " not implemented")
+        elif model == MEL_MODEL :
+            MFCC_transform = torchaudio.transforms.MFCC(melkwargs={
+                "n_fft": n_fft,
+                "n_mels": n_mels,
+                "hop_length": hop_length,
+                "mel_scale": "htk",
+            })
+            storage['transform'].append(MFCC_transform)
+            waveform_size = storage['transform'][-1](storage['waveform']).shape
+            storage['model'].append(mel_model(input_shape=waveform_size, n_output=len(train_set.labels)))
+            storage['model'][-1].to(storage['device'])
         else :
             raise Exception(model +" not implemented")
         c+=1
@@ -203,8 +226,10 @@ def main():
     storage['optimizer']=[]
     storage['scheduler']=[]
     for i in range(len(args.model)) :
+
         storage['optimizer'].append( optim.Adam(storage['model'][i].parameters(), lr=args.lr[currentOrLast(i,args.lr)], weight_decay=args.weight_decay[currentOrLast(i,args.weight_decay)]))
-        storage['scheduler'].append( optim.lr_scheduler.StepLR(storage['optimizer'][i], step_size=args.step_size[currentOrLast(i,args.step_size)],
+        if not args.predict :
+            storage['scheduler'].append( optim.lr_scheduler.StepLR(storage['optimizer'][i], step_size=args.step_size[currentOrLast(i,args.step_size)],
                                         gamma=args.gamma[currentOrLast(i,args.gamma)]) ) # reduce the learning after 20 epochs by a factor of 10
     # TODO : maybe we can set this too in the parser
     # Define the loss Function
@@ -216,35 +241,66 @@ def main():
     storage['log_interval'] = args.log_interval
     storage['n_epoch'] = args.num_epochs
 
+    # loading the saved model
+    print('Launching ', args.exp_name, 'experience')
+    if args.load_checkpoint :
+        for i in range(len(storage['model'])):
+            storage['model'][i].load_state_dict( torch.load( args.exp_name + '/' + args.load_checkpoint[currentOrLast(i, args.load_checkpoint)]) )
+
     if not args.predict :
+        makedirs(args.exp_name, exist_ok=True)
+        storage['losses_train'] = {i: [] for i in range(len(storage['model']))}
         if args.no_validation :
-            storage['pbar_update'] = [1 / len(storage['train_loader'][i]) for i in range(len(args.batch_size))]
-            storage['losses_train'] = {model: [] for model in storage['model']}
+            storage['pbar_update'] = [np.round(1 / len(storage['train_loader'][i]),3) for i in range(len(args.batch_size))]
+
         else :
-            storage['pbar_update'] = [1 / ( len(storage['train_loader'][i]) + len(storage['validation_loader'][i]) ) for i in range(len(args.batch_size))]
-            storage['losses_val'] = {model : [] for model in storage['model']}
-            storage['losses_train'] = {model: [] for model in storage['model']}
+            storage['pbar_update'] = [ np.round(1 / ( len(storage['train_loader'][i]) + len(storage['val_loader'][i]) ) ,3)for i in range(len(args.batch_size))]
+            storage['losses_val'] = {i: [] for i in range(len(storage['model']))}
+    else :
+        storage['pbar_update'] = [np.round(1 / (len(storage['test_loader'][i])), 3) for i in range(len(args.batch_size))]
 
-
-    # Do the training or the prediction :
-    if not args.predict:
-        with timeThat('training program'):
-            #TODO  : It's here that train the differents models
-            for exp_i in range(len(storage['model'])):
-                # The transform needs to live on the same device as the model and the data.
-                storage['transform'][exp_i] = storage['transform'][exp_i].to(storage['device'])
-                with tqdm(total=storage['n_epoch'][exp_i]) as pbar:
-                    storage['pbar'] = pbar
-                    for epoch in range(1, storage['n_epoch'][exp_i] + 1):
-                        storage['epoch'] = epoch
+    with timeThat('main program'):
+        #TODO  : It's here that train the differents models
+        for exp_i in range(len(storage['model'])):
+            print('expérience :',exp_i)
+            best_model_stats=0
+            # The transform needs to live on the same device as the model and the data.
+            storage['transform'][exp_i] = storage['transform'][exp_i].to(storage['device'])
+            with tqdm(total=storage['n_epoch'][currentOrLast(exp_i,storage['n_epoch'])]) as pbar:
+                storage['pbar'] = pbar
+                for epoch in range(1, storage['n_epoch'][exp_i] + 1):
+                    storage['epoch'] = epoch
+                    if not args.predict :
                         train(storage,exp_i)
                         if not args.no_validation:
-                            # TODO : implement validation
-                            pass
-                        storage['scheduler'][exp_i].step()
-    else :
-        #TODO : do the prediction too
-        raise Exception("prediction not implemented")
+                            train(storage,exp_i,True)
+                            storage['scheduler'][exp_i].step()
+                        # Do the saving accuracy_wise
+                        if args.save_checkpoint and best_model_stats < storage['accuracy']:
+                            torch.save(storage['model'][exp_i].state_dict(),
+                                       args.exp_name + '/' + args.save_checkpoint[
+                                           currentOrLast(exp_i, args.save_checkpoint)])
+                    else :
+                        test(storage,exp_i)
+
+            # TODO : rajouter l'accuracy
+            if not args.predict and (not args.nosaveplot  or args.noshowplot):
+                plt.plot(storage['losses_train'][exp_i], label='train loss')
+                if not args.no_validation:
+                    plt.plot(storage['losses_val'][exp_i], label='validation loss')
+                plt.title("training/val loss exp" + str(exp_i))
+                plt.legend()
+
+                if not args.nosaveplot  :
+                    savename = args.save_checkpoint[currentOrLast(exp_i, args.save_checkpoint)] if args.save_checkpoint else \
+                        args.model[exp_i]+'_'+str(exp_i)
+                    plt.savefig(args.exp_name + '/' +savename+'.png' )
+                if not args.noshowplot :
+                    plt.show()
+
+
+
+
 
 
 

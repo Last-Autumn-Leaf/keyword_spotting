@@ -90,9 +90,12 @@ def plot_kernels2D(tensor,plotName=False,transpose=False):
   plt.show()
 
 
-def train(storage,exp_i=0):
-    storage['model'][exp_i].train()
-    for batch_idx, (data, target) in enumerate(storage['train_loader'][exp_i]):
+def train(storage,exp_i=0,validation=False):
+    if not validation: storage['model'][exp_i].train()
+    else : storage['model'][exp_i].eval()
+    correct = 0
+    mode='val' if validation else 'train'
+    for batch_idx, (data, target) in enumerate(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])]):
 
         data = data.to(storage['device'])
         target = target.to(storage['device'])
@@ -101,28 +104,39 @@ def train(storage,exp_i=0):
         data = storage['transform'][exp_i](data)
         output = storage['model'][exp_i](data)
 
+        correct += storage['metrics'](output, target)
+
         # negative log-likelihood for a tensor of size (batch x 1 x n_output)
         loss = storage['lossFunc'](output.squeeze(), target)
-
-        storage['optimizer'][exp_i].zero_grad()
-        loss.backward()
-        storage['optimizer'][exp_i].step()
+        if not validation :
+            storage['optimizer'][exp_i].zero_grad()
+            loss.backward()
+            storage['optimizer'][exp_i].step()
 
         # print training stats
-        if batch_idx % storage['log_interval'][exp_i] == 0:
+        if batch_idx % storage['log_interval'] == 0:
             print(
-                f"Train Epoch: {storage['epoch']} [{batch_idx * len(data)}/{len(storage['train_loader'][exp_i].dataset)}"
-                f" ({100. * batch_idx / len(storage['train_loader'][exp_i]):.0f}%)]\tLoss: {loss.item():.6f}")
+                mode+f" Epoch: {storage['epoch']} [{batch_idx * len(data)}/{len(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])].dataset)}"
+                f" ({100. * batch_idx / len(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])]):.0f}%)]\tLoss: {loss.item():.6f}")
 
         # update progress bar
-        storage['pbar'].update(storage['pbar_update'][exp_i])
+        storage['pbar'].update(storage['pbar_update'][currentOrLast(exp_i,storage['pbar_update'])])
         # record loss
-        storage['losses_train'][storage['model'][exp_i]].append(loss.item())
+        storage['losses_'+mode][exp_i].append(loss.item())
 
-def validation(storage,exp_i=0):
+    storage['accuracy']=100. * correct / len(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])].dataset)
+    if validation:
+        print(
+            f"\nvalidation Epoch: {storage['epoch']}\tAccuracy: {correct}/{len(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])].dataset)} "
+            f"({100. * correct / len(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])].dataset):.0f}%)\n")
+
+
+
+
+def test(storage,exp_i=0):
     storage['model'][exp_i].eval()
     correct = 0
-    for data, target in storage['validation_loader'][exp_i]:
+    for data, target in storage['test_loader'][currentOrLast(exp_i,storage['test_loader'])]:
         data = data.to(storage['device'])
         target = target.to(storage['device'])
 
@@ -133,11 +147,11 @@ def validation(storage,exp_i=0):
         correct += storage['metrics'](output,target)
 
         # update progress bar
-        storage['pbar'].update(storage['pbar_update'])
 
+        storage['pbar'].update(storage['pbar_update'][currentOrLast(exp_i, storage['pbar_update'])])
     print(
-        f"\nTest Epoch: {storage['epoch']}\tAccuracy: {correct}/{len(storage['validation_loader'][exp_i].dataset)} "
-        f"({100. * correct / len(storage['validation_loader'][exp_i].dataset):.0f}%)\n")
+        f"\nTest Epoch: {storage['epoch']}\tAccuracy: {correct}/{len( storage['test_loader'][currentOrLast(exp_i, storage['test_loader'])].dataset)} "
+        f"({100. * correct / len(    storage['test_loader'][currentOrLast(exp_i, storage['test_loader'])].dataset):.0f}%)\n")
 
 
 

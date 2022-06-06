@@ -36,6 +36,7 @@ class M5(nn.Module):
         x = self.fc1(x)
         return F.log_softmax(x, dim=2)
 
+
     def count_parameters(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class mel_model(nn.Module):
-    def __init__(self, input_shape, n_channel=64,n_output=35):
+    def __init__(self, input_shape=0, n_channel=64,n_output=35):
         super().__init__()
 
         self.dropout=nn.Dropout(0.5)
