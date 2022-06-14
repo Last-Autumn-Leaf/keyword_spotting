@@ -156,6 +156,10 @@ def test(storage,exp_i=0):
         f"({100. * correct / len(    storage['test_loader'][currentOrLast(exp_i, storage['test_loader'])].dataset):.0f}%)\n")
 
 
+def space_frequency(image):
+    freqx = np.fft.fftfreq(image.shape[0])
+    freqy = np.fft.fftfreq(image.shape[1])
+    image_fft = np.fft.fft2(image)
 
 
 def showResult(model):
