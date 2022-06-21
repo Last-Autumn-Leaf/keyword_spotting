@@ -54,7 +54,7 @@ def plotFFT(tensor,fe=8000,ax=None):
   else:
     ax.plot(freq,abs(spectrum))
 
-def plot_kernels1D(tensor,FFT=False,fe=8000,plotName=False):
+def plot_kernels1D(tensor,FFT=False,fe=8000,plotName=False,save=None):
   if tensor.ndim==2:
     tensor=tensor[:,None,:]
 
@@ -72,9 +72,11 @@ def plot_kernels1D(tensor,FFT=False,fe=8000,plotName=False):
     a.axis('off')
     if plotName:
       a.set_title('kernel'+str(i))
+  if save != None :
+      plt.savefig(save+ '.png')
   plt.show()
 
-def plot_kernels2D(tensor,plotName=False,transpose=False):
+def plot_kernels2D(tensor,plotName=False,transpose=False,save=None):
   if tensor.ndim==3 :
       tensor=tensor[:,None,:]
 
@@ -89,6 +91,8 @@ def plot_kernels2D(tensor,plotName=False,transpose=False):
     a.axis('off')
     if plotName:
       a.set_title('kernel'+str(i))
+  if save != None :
+      plt.savefig(save+ '.png')
   plt.show()
 
 

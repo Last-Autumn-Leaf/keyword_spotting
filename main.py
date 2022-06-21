@@ -190,7 +190,9 @@ def main():
     storage['transform']=[]
     storage['model']=[]
     c=0
+
     for model in args.model :
+
         if model == M5_model :
             M5_transform = torchaudio.transforms.Resample(orig_freq=storage['sample_rate'], new_freq=new_sample_rate)
             storage['transform'].append(M5_transform)
@@ -203,7 +205,7 @@ def main():
 
             # setting up the model
             waveform_size = storage['transform'][-1](storage['waveform']).shape
-            storage['model'] .append( spectrogram_model(input_shape=waveform_size, n_output=len(train_set.labels if not args.predict else test_set.labels)) )
+            storage['model'] .append( spectrogram_model(input_shape=waveform_size, debug=True,n_output=len(train_set.labels if not args.predict else test_set.labels)) )
             storage['model'][-1].to(storage['device'])
         elif model == MEL_MODEL :
             MFCC_transform = torchaudio.transforms.MFCC(melkwargs={
@@ -300,13 +302,6 @@ def main():
                     print('saving plot :',args.exp_name + '/' +savename+'.png' )
                 if not args.noshowplot :
                     plt.show()
-
-
-
-
-
-
-
 
 
 
