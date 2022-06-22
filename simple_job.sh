@@ -1,0 +1,7 @@
+#!/bin/bash
+#SBATCH --time=00:2:00
+#SBATCH --account=def-seanwood
+#SBATCH --output=./output/output
+#SBTACH --mem=125G
+python test.py
+sleep 30
