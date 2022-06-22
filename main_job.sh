@@ -4,6 +4,6 @@
 #SBATCH --output=./logs/slurm_%j.out
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=6
-#SBATCH --mem=4G
+#SBATCH --mem=16G
 source ~/venv/bin/activate
 python main.py --model mel --save_checkpoint 'mel' --num-epochs 10
