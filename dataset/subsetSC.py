@@ -2,6 +2,10 @@ import torchaudio
 from torchaudio.datasets import SPEECHCOMMANDS
 import os
 import torch
+import pickle
+
+from utilsFunc import timeThis, timeThat
+
 
 class SubsetSC(SPEECHCOMMANDS):
     def __init__(self, subset: str = None,root ="./"):
@@ -65,7 +69,21 @@ class SubsetSC(SPEECHCOMMANDS):
 
 
 if __name__=='__main__':
-    train_set = SubsetSC("training")
-    test_set = SubsetSC("testing")
+    with timeThat('init dataset') :
+        train_set = SubsetSC("training")
+        validation_set = SubsetSC("validation")
+        test_set = SubsetSC("testing")
 
-    waveform, sample_rate, label, speaker_id, utterance_number = train_set[0]
+    # do the savings :
+    #Important notice: The maximum file size of pickle is about 2GB.
+    #The advantage of HIGHEST_PROTOCOL is that files get smaller. This makes unpickling sometimes much faster.
+    with open('./SpeechCommands/pickle/test_set.pt', 'wb') as handle:
+        pickle.dump(test_set, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    with open('test_set.pt', 'rb') as handle:
+        pickled_test_set = pickle.load(handle)
+
+    if test_set == pickled_test_set :
+        print('importation réussite')
+
+    #waveform, sample_rate, label, speaker_id, utterance_number = train_set[0]
