@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=00:2:00
+#SBATCH --time=10:00:00
 #SBATCH --account=def-seanwood
 #SBATCH --output=./logs/slurm_%j.out
 #SBATCH --gpus-per-node=1
