@@ -6,6 +6,10 @@ import numpy as np
 import numpy.fft as fft
 
 #Decorator Function
+import torch
+import torchaudio
+
+
 def timeThis(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -173,6 +177,42 @@ def showResult(model):
     SecondLayerWeights =model.conv2.weight.detach().cpu().numpy()
     plot_kernels1D(SecondLayerWeights)
     plot_kernels1D(SecondLayerWeights, True)
+
+
+
+class PdmTransform(torch.nn.Module):
+    def __init__(self, orig_freq: int = 16000,pdm_factor: int = 48,signal_len:int=16000):
+        super().__init__()
+        self.PDM_transform=torchaudio.transforms.Resample(orig_freq=orig_freq, new_freq=int(np.round(signal_len * pdm_factor)))
+
+    def pdm(self,x):
+        if x.ndim ==1 :
+            n = len(x)
+        else:
+            n = len(x[-1])
+
+        y = torch.zeros_like(x)
+        shape=[* x.shape]
+        shape[-1]+=+1
+        error = torch.ones(shape)
+
+        for i in range(n):
+            idx = (np.s_[:],) * (x.ndim-1) + (i,)
+            y[idx] = torch.where(x[idx] >= error[idx] ,torch.ones(shape[:-1]),torch.zeros(shape[:-1]))
+            error[(np.s_[:],) * (x.ndim-1) + (i+1,)] = y[idx] - x[idx] + error[idx]
+        return y, error[:n]
+
+    def __call__(self, samples):
+        upsampled_samples = self.PDM_transform(samples)
+        # upsampled_samples = resample(samples, n_pdm_samples)
+        pdm_samples, pdm_error = self.pdm(upsampled_samples)
+
+        return pdm_samples
+
+    def __repr__(self):
+        return "custom PDM transform, does the rescale and the transform"
+
+
 
 currentOrLast = lambda c,lst: c if c <len(lst) else -1
 if __name__=='__main__':

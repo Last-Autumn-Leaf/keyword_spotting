@@ -16,11 +16,14 @@ from models.M5 import *
 from utilsFunc import *
 import argparse
 from os import makedirs
+import pickle
 print('imports done')
 spect_model='spect'
 M5_model='M5'
 MEL_MODEL='mel'
+PDM_MODEL='PDM'
 new_sample_rate=8000
+pdm_factor=10
 
 def argument_parser():
     """
@@ -35,7 +38,7 @@ def argument_parser():
     parser.add_argument("--exp_name", type=str,default="nameless_exp",
                         help="Name of experiment")
     parser.add_argument("--model", type=str, nargs="+", default=spect_model,
-                        choices=[M5_model, spect_model, MEL_MODEL])
+                        choices=[M5_model, spect_model, MEL_MODEL,PDM_MODEL])
     parser.add_argument("--batch_size", nargs="+", type=int, default=100,
                         help="The size of the training batch. Accepts multiple space-seperated values for hyperparameter search (--batch_size 5 10 20)")
     parser.add_argument("--optimizer", type=str, default="Adam", choices=["Adam", "SGD"],
@@ -54,7 +57,10 @@ def argument_parser():
     parser.add_argument("--gamma", nargs="+", type=float, default=0.1,
                         help="gamma of scheduler. Accepts multiple space-seperated values for hyperparameter search (--gamma 0.001 0.01 0.1)")
 
-    #parser.add_argument("--data_aug", action="store_true",help="Data augmentation")
+    # MODEL PARAMS
+    parser.add_argument("--pdm_factor", type=int, default=pdm_factor,
+                        help="pdm factor when using PDM model, by default set to 48 ")
+
     parser.add_argument("--predict", action="store_true",
                         help="Load weights to predict the mask of a randomly selected image from the test set")
     parser.add_argument("--log_interval", type=int, default=20,
@@ -68,10 +74,19 @@ def argument_parser():
     parser.add_argument("--no_validation", action="store_true",
                         help="Will not do the validation")
 
+    parser.add_argument("--noshowplot", action="store_true",
+                        help="don't show plot")
+    parser.add_argument("--nosaveplot", action="store_true",
+                        help="don't save plot")
+
+    parser.add_argument("--without_pickled_data", action="store_true",
+                        help="don't use pickle to load dataset")
+
     parser.add_argument("--fe", type=int, default=16000,
                         help="Sampling frequency in Hz")
     parser.add_argument("--n_mels", type=int, default=50,
                         help="numbers of mel filters")
+    # This should be put LAST on the parser
     parser.add_argument("--win_length", type=int, default=int(30e-3 * parser.parse_args().fe),
                         help="Window length")
     parser.add_argument("--hop_length", type=int, default=int(10e-3 * parser.parse_args().fe),
@@ -79,10 +94,7 @@ def argument_parser():
     parser.add_argument("--n_fft", type=int, default=parser.parse_args().win_length,
                         help="n_fft")
 
-    parser.add_argument("--noshowplot", action="store_true",
-                        help="don't show plot")
-    parser.add_argument("--nosaveplot", action="store_true",
-                        help="don't save plot")
+    
     return parser.parse_args()
 
 
@@ -131,7 +143,11 @@ def main():
         print('Training mode')
         with timeThat('training/validation sets'):
             if 'train_set' not in locals():
-                train_set = SubsetSC("training", root)
+                if args.without_pickled_data :
+                    train_set = SubsetSC("training", root)
+                else :
+                    with open('./SpeechCommands/pickle/train_set.pt', 'rb') as handle:
+                        train_set = pickle.load(handle)
                 storage['train_loader']=[]
                 for batch_size in args.batch_size :
                     storage['train_loader'] .append( torch.utils.data.DataLoader(
@@ -144,7 +160,11 @@ def main():
                 print('training loader set up, size',len(train_set))
             if not args.no_validation :
                 if 'val_set' not in locals():
-                    val_set = SubsetSC("validation", root)
+                    if args.without_pickled_data:
+                        val_set = SubsetSC("validation", root)
+                    else :
+                        with open('./SpeechCommands/pickle/validation_set.pt', 'rb') as handle:
+                            val_set = pickle.load(handle)
                     storage['val_loader']=[]
                     for batch_size in args.batch_size:
                         storage['val_loader'].append(torch.utils.data.DataLoader(
@@ -160,7 +180,11 @@ def main():
         print('Prediction mode')
         with timeThat('test sets'):
             if 'test_set' not in locals():
-                test_set = SubsetSC("testing", root)
+                if args.without_pickled_data:
+                    test_set = SubsetSC("testing", root)
+                else :
+                    with open('./SpeechCommands/pickle/test_set.pt', 'rb') as handle:
+                        test_set = pickle.load(handle)
                 storage['test_loader'] = []
                 for batch_size in args.batch_size:
                     storage['test_loader'].append(torch.utils.data.DataLoader(
@@ -216,8 +240,18 @@ def main():
             })
             storage['transform'].append(MFCC_transform)
             waveform_size = storage['transform'][-1](storage['waveform']).shape
-            storage['model'].append(mel_model(input_shape=waveform_size, n_output=len(train_set.labels)))
+            storage['model'].append(mel_model(input_shape=waveform_size, n_output=len(train_set.labels if not args.predict else test_set.labels)))
             storage['model'][-1].to(storage['device'])
+
+        elif model == PDM_MODEL :
+
+            PDM_transform=PdmTransform(pdm_factor=args.pdm_factor,signal_len=len(storage['waveform'][0]),
+                                       orig_freq=storage['sample_rate'])
+            storage['transform'].append(PDM_transform)
+            waveform_size = storage['transform'][-1](storage['waveform']).shape
+            storage['model'].append(M5( n_output=len(test_set.labels if args.predict else train_set.labels)) )
+            storage['model'][-1].to(storage['device'])
+
         else :
             raise Exception(model +" not implemented")
         c+=1
@@ -247,7 +281,7 @@ def main():
     print('Launching ', args.exp_name, 'experience')
     if args.load_checkpoint :
         for i in range(len(storage['model'])):
-            storage['model'][i].load_state_dict( torch.load( args.exp_name + '/' + args.load_checkpoint[currentOrLast(i, args.load_checkpoint)]) )
+            storage['model'][i].load_state_dict( torch.load( args.exp_name + '/' + args.load_checkpoint[currentOrLast(i, args.load_checkpoint)],map_location=storage['device'] ) )
 
     if not args.predict :
         makedirs(args.exp_name, exist_ok=True)
