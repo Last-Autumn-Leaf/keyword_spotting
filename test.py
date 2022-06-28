@@ -22,7 +22,7 @@ if __name__=='__main__':
     test_importing_dataset(r)'''
 
 
-    '''root = './'
+    root = './'
     with timeThat('init dataset') :
         train_set = SubsetSC("training",root=root)
         validation_set = SubsetSC("validation",root=root)
@@ -39,7 +39,7 @@ if __name__=='__main__':
             pickle.dump(train_set, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         with open('./SpeechCommands/pickle/validation_set.pt', 'wb') as handle:
-            pickle.dump(validation_set, handle, protocol=pickle.HIGHEST_PROTOCOL)'''
+            pickle.dump(validation_set, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     with timeThat('reimporting dataset'):
         with open('./SpeechCommands/pickle/test_set.pt', 'rb') as handle:
