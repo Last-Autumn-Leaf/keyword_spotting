@@ -187,6 +187,7 @@ class PdmTransform(torch.nn.Module):
         self.PDM_transform=torchaudio.transforms.Resample(orig_freq=orig_freq, new_freq=int(np.round(signal_len * pdm_factor)))
 
     def to(self,device):
+        self.device=device
         self.PDM_transform=self.PDM_transform.to(device)
         return self
 
