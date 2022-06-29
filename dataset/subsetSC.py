@@ -69,6 +69,4 @@ class SubsetSC(SPEECHCOMMANDS):
 
 
 if __name__=='__main__':
-    ...
-
-    #waveform, sample_rate, label, speaker_id, utterance_number = train_set[0]
+   ...

@@ -6,6 +6,6 @@
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=4G
 source ~/venv/bin/activate
-python test.py
+python saveDataset.py
 deactivate
 sleep 30

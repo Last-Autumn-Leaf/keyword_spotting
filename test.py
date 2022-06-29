@@ -36,3 +36,4 @@ if __name__=='__main__':
             print("validation set imported")
 
     print("import successfull")
+    print(waveform.device)

@@ -1,7 +1,8 @@
+import torch
+
 from dataset.subsetSC import SubsetSC
-import sys
 import pickle
-from .. import utilsFunc
+import utilsFunc
 
 def test_importing_dataset(root=None):
     print("testing importing dataset")
@@ -22,7 +23,7 @@ if __name__=='__main__':
 
     test_importing_dataset(r)'''
 
-
+    device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
     root = './'
     with utilsFunc.timeThat('init dataset') :
         train_set = SubsetSC("training",root=root)
@@ -57,3 +58,4 @@ if __name__=='__main__':
             print("validation set imported")
 
     print("import successfull")
+    print( 'dataset device type :',waveform.device)
