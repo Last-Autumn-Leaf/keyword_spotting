@@ -201,13 +201,14 @@ class PdmTransform(torch.nn.Module):
             n = len(x[-1])
 
         y = torch.zeros_like(x).to(self.device)
+        print('y', y.is_cuda)
         shape=[* x.shape]
         shape[-1]+=+1
         error = torch.ones(shape).to(self.device)
-
+        print('error', error.is_cuda)
         for i in range(n):
             idx = (np.s_[:],) * (x.ndim-1) + (i,)
-            y[idx] = torch.where(x[idx] >= error[idx] ,torch.ones(shape[:-1]),torch.zeros(shape[:-1]))
+            y[idx] = torch.where(x[idx] >= error[idx] ,torch.ones(shape[:-1]).to(self.device),torch.zeros(shape[:-1])).to(self.device)
             error[(np.s_[:],) * (x.ndim-1) + (i+1,)] = y[idx] - x[idx] + error[idx]
         return y, error[:n]
 
