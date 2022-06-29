@@ -213,9 +213,11 @@ class PdmTransform(torch.nn.Module):
 
     def __call__(self, samples):
         upsampled_samples = self.PDM_transform(samples)
+        print('upsampled_samples',upsampled_samples.is_cuda)
         # upsampled_samples = resample(samples, n_pdm_samples)
         pdm_samples, pdm_error = self.pdm(upsampled_samples)
-
+        print('pdm_samples', pdm_samples.is_cuda)
+        print('pdm_error', pdm_error.is_cuda)
         return pdm_samples
 
     def __repr__(self):

@@ -259,6 +259,7 @@ def main():
             print('A2')
             storage['transform'][-1] = storage['transform'][-1].to(storage['device'])
             print('A3')
+            print('wv',storage['waveform'].is_cuda)
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'].append(M5( n_output=len(test_set.labels if args.predict else train_set.labels)) )
             storage['model'][-1].to(storage['device'])
