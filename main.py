@@ -197,6 +197,8 @@ def main():
                 print('test loader set up, size', len(test_set))
             storage['waveform'], storage['sample_rate'], label, speaker_id, utterance_number = test_set[0]
 
+    storage['waveform']=storage['waveform'].to(storage['device'])
+
 
     batch_size = args.batch_size
     num_epochs = args.num_epochs
