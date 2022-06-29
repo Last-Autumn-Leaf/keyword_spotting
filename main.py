@@ -249,15 +249,18 @@ def main():
             storage['model'][-1].to(storage['device'])
 
         elif model == PDM_MODEL :
-
+            print('A1')
             PDM_transform=PdmTransform(pdm_factor=args.pdm_factor,signal_len=len(storage['waveform'][0]),
                                        orig_freq=storage['sample_rate'])
             storage['transform'].append(PDM_transform)
             # The transform needs to live on the same device as the model and the data.
+            print('A2')
             storage['transform'][-1] = storage['transform'][-1].to(storage['device'])
+            print('A3')
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'].append(M5( n_output=len(test_set.labels if args.predict else train_set.labels)) )
             storage['model'][-1].to(storage['device'])
+            print('A4')
 
         else :
             raise Exception(model +" not implemented")
