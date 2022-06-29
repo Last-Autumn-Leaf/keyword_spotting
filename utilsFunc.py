@@ -181,10 +181,13 @@ def showResult(model):
 
 
 
-class PdmTransform(object):
+class PdmTransform(torch.nn.Module):
     def __init__(self, orig_freq: int = 16000,pdm_factor: int = 48,signal_len:int=16000):
-
+        super(PdmTransform, self).__init__()
         self.PDM_transform=torchaudio.transforms.Resample(orig_freq=orig_freq, new_freq=int(np.round(signal_len * pdm_factor)))
+
+    def to(self,device):
+        self.PDM_transform=self.PDM_transform.to(device)
 
     def pdm(self,x):
         if x.ndim ==1 :
