@@ -105,18 +105,13 @@ def train(storage,exp_i=0,validation=False):
     else : storage['model'][exp_i].eval()
     correct = 0
     mode='val' if validation else 'train'
-    print('data 0' )
     for batch_idx, (data, target) in enumerate(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])]):
         data = data.to(storage['device'])
         target = target.to(storage['device'])
-        print('data 1')
         # apply transform and model on whole batch directly on device
         data = storage['transform'][exp_i](data)
-        print('data transformed')
-        data = data.to(storage['device'])
-        print('data sent to device')
+        #data = data.to(storage['device'])
         output = storage['model'][exp_i](data)
-        print('data sent to model')
         correct += storage['metrics'](output, target)
 
         # negative log-likelihood for a tensor of size (batch x 1 x n_output)
@@ -155,7 +150,7 @@ def test(storage,exp_i=0):
 
         # apply transform and model on whole batch directly on device
         data = storage['transform'][exp_i](data)
-        data = data.to(storage['device'])
+        #data = data.to(storage['device'])
         output = storage['model'][exp_i](data)
 
         correct += storage['metrics'](output,target)
@@ -201,24 +196,21 @@ class PdmTransform(torch.nn.Module):
             n = len(x[-1])
 
         y = torch.zeros_like(x).to(self.device)
-        print('y', y.is_cuda)
         shape=[* x.shape]
         shape[-1]+=+1
         error = torch.ones(shape).to(self.device)
-        print('error', error.is_cuda)
         for i in range(n):
             idx = (np.s_[:],) * (x.ndim-1) + (i,)
-            y[idx] = torch.where(x[idx] >= error[idx] ,torch.ones(shape[:-1]).to(self.device),torch.zeros(shape[:-1]).to(self.device))
+            y[idx] = torch.where( x[idx] >= error[idx] ,
+                                  torch.ones(shape[:-1]).to(self.device),
+                                  torch.zeros(shape[:-1]).to(self.device))
             error[(np.s_[:],) * (x.ndim-1) + (i+1,)] = y[idx] - x[idx] + error[idx]
         return y, error[:n]
 
     def __call__(self, samples):
         upsampled_samples = self.PDM_transform(samples)
-        print('upsampled_samples',upsampled_samples.is_cuda)
         # upsampled_samples = resample(samples, n_pdm_samples)
         pdm_samples, pdm_error = self.pdm(upsampled_samples)
-        print('pdm_samples', pdm_samples.is_cuda)
-        print('pdm_error', pdm_error.is_cuda)
         return pdm_samples
 
     def __repr__(self):

@@ -227,6 +227,7 @@ def main():
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'].append(M5( n_output=len(test_set.labels if args.predict else train_set.labels)) )
             storage['model'][-1].to(storage['device'])
+            print('M5 model setup')
         elif model == spect_model:
             #setting up the correct transform
             storage['transform'].append(torchaudio.transforms.Spectrogram(n_fft=n_fft,win_length=win_length,hop_length=hop_length))
@@ -236,6 +237,7 @@ def main():
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'] .append( spectrogram_model(input_shape=waveform_size, debug=True,n_output=len(train_set.labels if not args.predict else test_set.labels)) )
             storage['model'][-1].to(storage['device'])
+            print('spect model setup')
         elif model == MEL_MODEL :
             MFCC_transform = torchaudio.transforms.MFCC(melkwargs={
                 "n_fft": n_fft,
@@ -249,21 +251,20 @@ def main():
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'].append(mel_model(input_shape=waveform_size, n_output=len(train_set.labels if not args.predict else test_set.labels)))
             storage['model'][-1].to(storage['device'])
-
+            print('MEL model setup')
         elif model == PDM_MODEL :
-            print('A1')
+
             PDM_transform=PdmTransform(pdm_factor=args.pdm_factor,signal_len=len(storage['waveform'][0]),
                                        orig_freq=storage['sample_rate'])
             storage['transform'].append(PDM_transform)
             # The transform needs to live on the same device as the model and the data.
-            print('A2')
+
             storage['transform'][-1] = storage['transform'][-1].to(storage['device'])
-            print('A3')
-            print('wv',storage['waveform'].is_cuda)
+
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'].append(M5( n_output=len(test_set.labels if args.predict else train_set.labels)) )
             storage['model'][-1].to(storage['device'])
-            print('A4')
+            print('PDM model setup')
 
         else :
             raise Exception(model +" not implemented")
