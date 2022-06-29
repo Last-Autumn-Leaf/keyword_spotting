@@ -208,7 +208,7 @@ class PdmTransform(torch.nn.Module):
         print('error', error.is_cuda)
         for i in range(n):
             idx = (np.s_[:],) * (x.ndim-1) + (i,)
-            y[idx] = torch.where(x[idx] >= error[idx] ,torch.ones(shape[:-1]).to(self.device),torch.zeros(shape[:-1])).to(self.device)
+            y[idx] = torch.where(x[idx] >= error[idx] ,torch.ones(shape[:-1]).to(self.device),torch.zeros(shape[:-1]).to(self.device))
             error[(np.s_[:],) * (x.ndim-1) + (i+1,)] = y[idx] - x[idx] + error[idx]
         return y, error[:n]
 
