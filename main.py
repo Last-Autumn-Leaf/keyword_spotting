@@ -134,7 +134,12 @@ def main():
 
     #Downloading the DATASET
     root = '/content/sample_data' if args.COLAB else './'
-    if ''
+    if 'SLURM_TMPDIR' in os.environ :
+        root=os.environ['SLURM_TMPDIR']+'/SPC/SpeechCommands'
+        print('Using Compute Canada, root set to',root)
+        print('We will not use pickled data')
+        args.without_pickled_data = True
+
     if storage['device'] == "cuda":
         num_workers = 1
         pin_memory = True

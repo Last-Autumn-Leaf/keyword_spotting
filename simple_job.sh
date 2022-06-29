@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=4:00:00
+#SBATCH --time=6:00:00
 #SBATCH --account=def-seanwood
 #SBATCH --output=./logs/test_%j.out
 #SBATCH --gpus-per-node=1
