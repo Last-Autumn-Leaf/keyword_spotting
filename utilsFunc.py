@@ -188,6 +188,7 @@ class PdmTransform(torch.nn.Module):
 
     def to(self,device):
         self.PDM_transform=self.PDM_transform.to(device)
+        return self
 
     def pdm(self,x):
         if x.ndim ==1 :
