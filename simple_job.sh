@@ -8,18 +8,21 @@
 
 myDir="/home/yoogo/projects/def-seanwood/yoogo/mywork/keyword_spotting"
 #python_file="$myDir/test.py"
-
+archiveFile="$myDir/speech_commands_v0.02.tar.gz"
 #--------- unzipping dataset --------
 cd $SLURM_TMPDIR
-mkdir SPC
-cd SPC
-archiveFile="$myDir/speech_commands_v0.02.tar.gz"
-tar -xf $archiveFile
+
+cp archiveFile $SLURM_TMPDIR
+#mkdir SpeechCommands
+#cd SpeechCommands
+
+#tar -xf $archiveFile
+
 #--------- unzipping dataset --------
 
 cd $myDir
 source ~/venv/bin/activate
-python test.py $SLURM_TMPDIR/SPC
+python test.py $SLURM_TMPDIR
 
 deactivate
 
