@@ -106,7 +106,7 @@ def train(storage,exp_i=0,validation=False):
     correct = 0
     mode='val' if validation else 'train'
     for batch_idx, (data, target) in enumerate(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])]):
-
+        data = data.to(storage['device'])
         target = target.to(storage['device'])
 
         # apply transform and model on whole batch directly on device
@@ -147,7 +147,7 @@ def test(storage,exp_i=0):
     storage['model'][exp_i].eval()
     correct = 0
     for data, target in storage['test_loader'][currentOrLast(exp_i,storage['test_loader'])]:
-
+        data = data.to(storage['device'])
         target = target.to(storage['device'])
 
         # apply transform and model on whole batch directly on device
