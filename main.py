@@ -16,7 +16,9 @@ from models.M5 import *
 from utilsFunc import *
 import argparse
 from os import makedirs
+import os
 import pickle
+
 print('imports done')
 spect_model='spect'
 M5_model='M5'
@@ -132,6 +134,7 @@ def main():
 
     #Downloading the DATASET
     root = '/content/sample_data' if args.COLAB else './'
+    if ''
     if storage['device'] == "cuda":
         num_workers = 1
         pin_memory = True
