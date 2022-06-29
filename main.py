@@ -135,8 +135,8 @@ def main():
     #Downloading the DATASET
     root = '/content/sample_data' if args.COLAB else './'
     if 'SLURM_TMPDIR' in os.environ :
-        root=os.environ['SLURM_TMPDIR']+'/SPC/SpeechCommands'
-        print('Using Compute Canada, root set to',root)
+        root=os.environ['SLURM_TMPDIR']
+        print('Compute Canada detected, root set to',root)
         print('We will not use pickled data')
         args.without_pickled_data = True
 

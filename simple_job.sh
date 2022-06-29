@@ -7,16 +7,9 @@
 #SBATCH --mem=4G
 
 myDir="/home/yoogo/projects/def-seanwood/yoogo/mywork/keyword_spotting"
-#python_file="$myDir/test.py"
 archiveFile="$myDir/speech_commands_v0.02.tar.gz"
 #--------- unzipping dataset --------
-cd $SLURM_TMPDIR
-
 cp $archiveFile $SLURM_TMPDIR
-#mkdir SpeechCommands
-#cd SpeechCommands
-
-#tar -xf $archiveFile
 
 #--------- unzipping dataset --------
 
