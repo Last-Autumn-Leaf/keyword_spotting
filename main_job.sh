@@ -6,4 +6,4 @@
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=16G
 source ~/venv/bin/activate
-python main.py --model PDM --save_checkpoint 'PDM' --num-epochs 100
+python main.py --model PDM --save_checkpoint 'PDM' --num-epochs 100 --without_pickled_data
