@@ -105,6 +105,7 @@ def train(storage,exp_i=0,validation=False):
     else : storage['model'][exp_i].eval()
     correct = 0
     mode='val' if validation else 'train'
+    print('data 0' )
     for batch_idx, (data, target) in enumerate(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])]):
         data = data.to(storage['device'])
         target = target.to(storage['device'])
