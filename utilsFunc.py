@@ -196,10 +196,10 @@ class PdmTransform(torch.nn.Module):
         else:
             n = len(x[-1])
 
-        y = torch.zeros_like(x)
+        y = torch.zeros_like(x).to(self.device)
         shape=[* x.shape]
         shape[-1]+=+1
-        error = torch.ones(shape)
+        error = torch.ones(shape).to(self.device)
 
         for i in range(n):
             idx = (np.s_[:],) * (x.ndim-1) + (i,)
