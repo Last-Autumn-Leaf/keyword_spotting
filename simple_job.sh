@@ -12,7 +12,7 @@ archiveFile="$myDir/speech_commands_v0.02.tar.gz"
 #--------- unzipping dataset --------
 cd $SLURM_TMPDIR
 
-cp archiveFile $SLURM_TMPDIR
+cp $archiveFile $SLURM_TMPDIR
 #mkdir SpeechCommands
 #cd SpeechCommands
 
