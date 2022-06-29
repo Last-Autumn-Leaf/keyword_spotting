@@ -220,13 +220,16 @@ def main():
         if model == M5_model :
             M5_transform = torchaudio.transforms.Resample(orig_freq=storage['sample_rate'], new_freq=new_sample_rate)
             storage['transform'].append(M5_transform)
+            # The transform needs to live on the same device as the model and the data.
+            storage['transform'][-1] = storage['transform'][-1].to(storage['device'])
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'].append(M5( n_output=len(test_set.labels if args.predict else train_set.labels)) )
             storage['model'][-1].to(storage['device'])
         elif model == spect_model:
             #setting up the correct transform
             storage['transform'].append(torchaudio.transforms.Spectrogram(n_fft=n_fft,win_length=win_length,hop_length=hop_length))
-
+            # The transform needs to live on the same device as the model and the data.
+            storage['transform'][-1] = storage['transform'][-1].to(storage['device'])
             # setting up the model
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'] .append( spectrogram_model(input_shape=waveform_size, debug=True,n_output=len(train_set.labels if not args.predict else test_set.labels)) )
@@ -239,6 +242,8 @@ def main():
                 "mel_scale": "htk",
             })
             storage['transform'].append(MFCC_transform)
+            # The transform needs to live on the same device as the model and the data.
+            storage['transform'][-1] = storage['transform'][-1].to(storage['device'])
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'].append(mel_model(input_shape=waveform_size, n_output=len(train_set.labels if not args.predict else test_set.labels)))
             storage['model'][-1].to(storage['device'])
@@ -248,6 +253,8 @@ def main():
             PDM_transform=PdmTransform(pdm_factor=args.pdm_factor,signal_len=len(storage['waveform'][0]),
                                        orig_freq=storage['sample_rate'])
             storage['transform'].append(PDM_transform)
+            # The transform needs to live on the same device as the model and the data.
+            storage['transform'][-1] = storage['transform'][-1].to(storage['device'])
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'].append(M5( n_output=len(test_set.labels if args.predict else train_set.labels)) )
             storage['model'][-1].to(storage['device'])
@@ -300,8 +307,7 @@ def main():
         for exp_i in range(len(storage['model'])):
             print('expérience :',exp_i)
             best_model_stats=0
-            # The transform needs to live on the same device as the model and the data.
-            storage['transform'][exp_i] = storage['transform'][exp_i].to(storage['device'])
+
             with tqdm(total=storage['n_epoch'][currentOrLast(exp_i,storage['n_epoch'])]) as pbar:
                 storage['pbar'] = pbar
                 for epoch in range(1, storage['n_epoch'][exp_i] + 1):
