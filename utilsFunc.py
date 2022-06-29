@@ -108,12 +108,14 @@ def train(storage,exp_i=0,validation=False):
     for batch_idx, (data, target) in enumerate(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])]):
         data = data.to(storage['device'])
         target = target.to(storage['device'])
-
+        print('data 1')
         # apply transform and model on whole batch directly on device
         data = storage['transform'][exp_i](data)
+        print('data transformed')
         data = data.to(storage['device'])
+        print('data sent to device')
         output = storage['model'][exp_i](data)
-
+        print('data sent to model')
         correct += storage['metrics'](output, target)
 
         # negative log-likelihood for a tensor of size (batch x 1 x n_output)
