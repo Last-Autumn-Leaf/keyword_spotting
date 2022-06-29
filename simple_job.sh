@@ -19,7 +19,7 @@ tar -xf $archiveFile
 
 cd $myDir
 source ~/venv/bin/activate
-python test.py $SLURM_TMPDIR/SPC/SpeechCommands
+python test.py $SLURM_TMPDIR/SPC
 
 deactivate
 
