@@ -5,17 +5,11 @@
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=4G
-
 myDir="/home/yoogo/projects/def-seanwood/yoogo/mywork/keyword_spotting"
 archiveFile="$myDir/speech_commands_v0.02.tar.gz"
 #--------- unzipping dataset --------
 cp $archiveFile $SLURM_TMPDIR
-
 #--------- unzipping dataset --------
-
 cd $myDir
 source ~/venv/bin/activate
 python test.py $SLURM_TMPDIR
-
-deactivate
-

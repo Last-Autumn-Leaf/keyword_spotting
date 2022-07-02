@@ -1,18 +1,0 @@
-imports done
-parsing variables...
-Using : cuda
-Training mode
-training loader set up, size 84843
-validation loader set up, size 9981
-training/validation sets finished in  1:23:33.480075
-1  models have been set up
-Launching  nameless_exp experience
-expérience : 0
-  0%|          | 0/100 [00:00<?, ?it/s]terminate called after throwing an instance of 'c10::Error'
-  what():  Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
-Exception raised from compute_types at /tmp/coulombc/pytorch_build_2021-11-10_08-09-16/avx2/python3.9/pytorch/aten/src/ATen/TensorIterator.cpp:397 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x55 (0x2b8ee7da2905 in /home/yoogo/venv/lib/python3.9/site-packages/torch/lib/libc10.so)
-frame #1: c10::detail::torchCheckFail(char const*, char const*, unsigned int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) + 0xdb (0x2b8ee7d84185 in /home/yoogo/venv/lib/python3.9/site-packages/torch/lib/libc10.so)
-frame #2: at::TensorIteratorBase::compute_types(at::TensorIteratorConfig const&) + 0x468 (0x2b8ec279a088 in /home/yoogo/venv/lib/python3.9/site-packages/torch/lib/libtorch_cpu.so)
-
-/var/spool/slurmd/job29704749/slurm_script: line 9: 149197 Aborted                 (core dumped) python main.py --model PDM --save_checkpoint 'PDM' --num-epochs 100 --without_pickled_data

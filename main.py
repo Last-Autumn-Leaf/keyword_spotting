@@ -18,12 +18,15 @@ import argparse
 from os import makedirs
 import os
 import pickle
+from datetime import datetime
 
+print( datetime.today().strftime('%d-%m-%Y %H:%M:%S') )
 print('imports done')
 spect_model='spect'
 M5_model='M5'
-MEL_MODEL='mel'
+MEL_MODEL='MFCC'
 PDM_MODEL='PDM'
+spect_MEL='mel'
 new_sample_rate=8000
 pdm_factor=10
 
@@ -40,7 +43,7 @@ def argument_parser():
     parser.add_argument("--exp_name", type=str,default="nameless_exp",
                         help="Name of experiment")
     parser.add_argument("--model", type=str, nargs="+", default=spect_model,
-                        choices=[M5_model, spect_model, MEL_MODEL,PDM_MODEL])
+                        choices=[M5_model, spect_model, MEL_MODEL,PDM_MODEL,spect_MEL])
     parser.add_argument("--batch_size", nargs="+", type=int, default=100,
                         help="The size of the training batch. Accepts multiple space-seperated values for hyperparameter search (--batch_size 5 10 20)")
     parser.add_argument("--optimizer", type=str, default="Adam", choices=["Adam", "SGD"],
@@ -246,6 +249,18 @@ def main():
             storage['model'] .append( spectrogram_model(input_shape=waveform_size, debug=True,n_output=len(train_set.labels if not args.predict else test_set.labels)) )
             storage['model'][-1].to(storage['device'])
             print('spect model setup')
+        elif model == spect_MEL :
+            mel_spectrogram_transform = torchaudio.transforms.MelSpectrogram(n_fft=n_fft,
+                                                                             n_mels=n_mels, win_length=win_length,
+                                                                             hop_length=hop_length)
+            storage['transform'].append(mel_spectrogram_transform)
+            storage['transform'][-1] = storage['transform'][-1].to(storage['device'])
+
+            waveform_size = storage['transform'][-1](storage['waveform']).shape
+            storage['model'].append(mel_model(input_shape=waveform_size,
+                                              n_output=len(train_set.labels if not args.predict else test_set.labels)))
+            storage['model'][-1].to(storage['device'])
+            print('MEL spectrogram model setup')
         elif model == MEL_MODEL :
             MFCC_transform = torchaudio.transforms.MFCC(melkwargs={
                 "n_fft": n_fft,
@@ -259,7 +274,7 @@ def main():
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'].append(mel_model(input_shape=waveform_size, n_output=len(train_set.labels if not args.predict else test_set.labels)))
             storage['model'][-1].to(storage['device'])
-            print('MEL model setup')
+            print('MFCC model setup')
         elif model == PDM_MODEL :
 
             PDM_transform=PdmTransform(pdm_factor=args.pdm_factor,signal_len=len(storage['waveform'][0]),
