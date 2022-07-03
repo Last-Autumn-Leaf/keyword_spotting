@@ -340,7 +340,7 @@ def main():
 
             with tqdm(total=storage['n_epoch'][currentOrLast(exp_i,storage['n_epoch'])]) as pbar:
                 storage['pbar'] = pbar
-                for epoch in range(1, storage['n_epoch'][exp_i] + 1):
+                for epoch in range(1, storage['n_epoch'][currentOrLast(exp_i,storage['n_epoch'])] + 1):
                     storage['epoch'] = epoch
                     if not args.predict :
                         train(storage,exp_i)
@@ -359,11 +359,19 @@ def main():
 
             # TODO : rajouter l'accuracy
             if not args.predict and (not args.nosaveplot  or args.noshowplot):
-                plt.plot(storage['losses_train'][exp_i], label='train loss')
                 if not args.no_validation:
-                    plt.plot(storage['losses_val'][exp_i], label='validation loss')
-                plt.title("training/val loss exp" + str(exp_i))
-                plt.legend()
+                    fig, axs = plt.subplots(2)
+                    axs[1].plot(storage['losses_val'][exp_i], label='validation loss')
+                    axs[1].legend()
+                    axs[0].plot(storage['losses_train'][exp_i], label='train loss')
+                    axs[0].legend()
+                    fig.suptitle("training/val loss exp" + str(exp_i))
+                else :
+
+                    plt.plot(storage['losses_train'][exp_i], label='train loss')
+
+                    plt.title("training/val loss exp" + str(exp_i))
+                    plt.legend()
 
                 if not args.nosaveplot  :
                     savename = args.save_checkpoint[currentOrLast(exp_i, args.save_checkpoint)] if args.save_checkpoint else \
