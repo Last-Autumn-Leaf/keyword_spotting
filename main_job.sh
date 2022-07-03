@@ -12,6 +12,7 @@ archiveFile="$myDir/speech_commands_v0.02.tar.gz"
 cp $archiveFile $SLURM_TMPDIR
 
 source ~/venv/bin/activate
-python main.py --model PDM --save_checkpoint 'PDM' --num-epochs 100
+python main.py --model PDM mel --save_checkpoint 'PDM' 'mel_spect' --num-epochs 50 --lr 0.00001
+
 
 deactivate
