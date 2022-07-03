@@ -20,6 +20,8 @@ import os
 import pickle
 from datetime import datetime
 
+from torch.utils.tensorboard import SummaryWriter
+
 print( datetime.today().strftime('%d-%m-%Y %H:%M:%S') )
 print('imports done')
 spect_model='spect'
@@ -331,6 +333,9 @@ def main():
             storage['losses_val'] = {i: [] for i in range(len(storage['model']))}
     else :
         storage['pbar_update'] = [np.round(1 / (len(storage['test_loader'][i])), 3) for i in range(len(args.batch_size))]
+
+    # TensorBoards :
+    storage['writer'] = SummaryWriter('runs/'+args.exp_name)
 
     with timeThat('main program'):
         #TODO  : It's here that train the differents models

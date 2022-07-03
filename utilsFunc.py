@@ -114,8 +114,9 @@ def train(storage,exp_i=0,validation=False):
         output = storage['model'][exp_i](data)
         correct += storage['metrics'](output, target)
 
-        # negative log-likelihood for a tensor of size (batch x 1 x n_output)
+
         loss = storage['lossFunc'](output.squeeze(), target)
+
         if not validation :
             storage['optimizer'][exp_i].zero_grad()
             loss.backward()
@@ -132,13 +133,12 @@ def train(storage,exp_i=0,validation=False):
         # record loss
         storage['losses_'+mode][exp_i].append(loss.item())
 
+
     storage['accuracy']=100. * correct / len(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])].dataset)
     if validation:
         print(
             f"\nvalidation Epoch: {storage['epoch']}\tAccuracy: {correct}/{len(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])].dataset)} "
             f"({100. * correct / len(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])].dataset):.0f}%)\n")
-
-
 
 
 def test(storage,exp_i=0):
@@ -156,11 +156,12 @@ def test(storage,exp_i=0):
         correct += storage['metrics'](output,target)
 
         # update progress bar
-
         storage['pbar'].update(storage['pbar_update'][currentOrLast(exp_i, storage['pbar_update'])])
+    correct_percent=100. * correct / len(    storage['test_loader'][currentOrLast(exp_i, storage['test_loader'])].dataset)
     print(
         f"\nTest Epoch: {storage['epoch']}\tAccuracy: {correct}/{len( storage['test_loader'][currentOrLast(exp_i, storage['test_loader'])].dataset)} "
-        f"({100. * correct / len(    storage['test_loader'][currentOrLast(exp_i, storage['test_loader'])].dataset):.0f}%)\n")
+        f"({correct_percent:.0f}%)\n")
+    storage['writer'].add_scalar('prediction', correct_percent)
 
 
 def space_frequency(image):
