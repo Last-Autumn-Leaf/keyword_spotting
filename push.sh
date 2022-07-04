@@ -6,7 +6,7 @@ git add \*.out
 git add \*.py
 git add \*.out
 git add \*.sh
-
+git add runs\*
 git add *.ipynb
 git add *.png
 git add *.pt

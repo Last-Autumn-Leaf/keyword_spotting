@@ -342,7 +342,9 @@ def main():
         for exp_i in range(len(storage['model'])):
             print('expérience :',exp_i)
             best_model_stats=0
-
+            storage['current_model']=args.model [exp_i] + '_'+str(exp_i)
+            storage['train_index']=0
+            storage['validation_index']=0
             with tqdm(total=storage['n_epoch'][currentOrLast(exp_i,storage['n_epoch'])]) as pbar:
                 storage['pbar'] = pbar
                 for epoch in range(1, storage['n_epoch'][currentOrLast(exp_i,storage['n_epoch'])] + 1):
@@ -385,6 +387,8 @@ def main():
                     print('saving plot :',args.exp_name + '/' +savename+'.png' )
                 if not args.noshowplot :
                     plt.show()
+
+    storage['writer'].close()
 
 
 
