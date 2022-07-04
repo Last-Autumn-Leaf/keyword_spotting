@@ -345,6 +345,7 @@ def main():
             storage['current_model']=args.model [exp_i] + '_'+str(exp_i)
             storage['train_index']=0
             storage['val_index']=0
+            storage['acc_index']=0
             with tqdm(total=storage['n_epoch'][currentOrLast(exp_i,storage['n_epoch'])]) as pbar:
                 storage['pbar'] = pbar
                 for epoch in range(1, storage['n_epoch'][currentOrLast(exp_i,storage['n_epoch'])] + 1):

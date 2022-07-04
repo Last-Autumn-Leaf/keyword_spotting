@@ -123,6 +123,10 @@ def train(storage,exp_i=0,validation=False):
             storage['optimizer'][exp_i].step()
             storage['writer'].add_scalar('training loss ' + storage['current_model'], loss.item(),storage['train_index'])
             storage['train_index']+=1
+        else :
+            storage['writer'].add_scalar('validation loss ' + storage['current_model'], loss.item(),
+                                         storage['val_index'])
+            storage['val_index'] += 1
 
         # print training stats
         if batch_idx % storage['log_interval'] == 0:
@@ -139,8 +143,8 @@ def train(storage,exp_i=0,validation=False):
 
     storage['accuracy']=100. * correct / len(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])].dataset)
     if validation:
-        storage['writer'].add_scalar('validation loss ' + storage['current_model'], loss.item(), storage['val_index'])
-        storage['val_index'] += 1
+        storage['writer'].add_scalar('validation accuracy ' + storage['current_model'], loss.item(), storage['acc_index'])
+        storage['acc_index'] += 1
         print(
             f"\nvalidation Epoch: {storage['epoch']}\tAccuracy: {correct}/{len(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])].dataset)} "
             f"({100. * correct / len(storage[mode+'_loader'][currentOrLast(exp_i,storage[mode+'_loader'])].dataset):.0f}%)\n")
