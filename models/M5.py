@@ -41,4 +41,4 @@ class M5(nn.Module):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
 if __name__=='__main__':
-    pass
+    ...

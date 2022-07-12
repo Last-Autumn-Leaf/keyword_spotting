@@ -1,10 +1,6 @@
-import torchaudio
 from torchaudio.datasets import SPEECHCOMMANDS
 import os
 import torch
-import pickle
-
-from utilsFunc import timeThis, timeThat
 
 
 class SubsetSC(SPEECHCOMMANDS):

@@ -6,10 +6,14 @@
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=16G
 
+#Variables
 myDir="/home/yoogo/projects/def-seanwood/yoogo/mywork/keyword_spotting"
 archiveFile="$myDir/speech_commands_v0.02.tar.gz"
+root=${SLURM_TMPDIR}
+archiveDir="$root/SpeechCommands/speech_commands_v0.02"
 
-cp $archiveFile $SLURM_TMPDIR
+mkdir -p $archiveDir
+tar -xf $archiveFile --directory $archiveDir
 
 source ~/venv/bin/activate
 python main.py --model PDM mel --save_checkpoint PDM mel --num-epochs 100 --lr 0.000005 --pdm_factor 48 --exp_name testU

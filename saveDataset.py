@@ -2,7 +2,8 @@ import torch
 
 from dataset.subsetSC import SubsetSC
 import pickle
-import utilsFunc
+from helper import utilsFunc
+
 
 def test_importing_dataset(root=None):
     print("testing importing dataset")

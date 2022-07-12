@@ -8,8 +8,9 @@ class mel_model(nn.Module):
         super().__init__()
 
         self.dropout=nn.Dropout(0.5)
-        self.conv1 = nn.Sequential( nn.Conv2d(1, n_channel, kernel_size=(20,8), stride=(1,3)),
-                                    nn.ReLU(),
+        self.conv1 =  nn.Conv2d(1, n_channel, kernel_size=(20,8), stride=(1,3))
+
+        self.seq = nn.Sequential(nn.ReLU(),
                                     self.dropout,
                                     nn.MaxPool2d((1,3))
         )
@@ -46,8 +47,9 @@ class mel_model(nn.Module):
     def forward(self, x):
 
         x = self.conv1(x)
+        x = self.seq(x)
         x = self.conv2(x)
-        x=self.flatten(x)
+        x = self.flatten(x)
 
         x=self.fc(x)
         return F.log_softmax(x,dim=-1)

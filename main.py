@@ -1,10 +1,4 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-import torchaudio,torchvision
-import matplotlib.pyplot as plt
-import IPython.display as ipd
 from tqdm import tqdm
 import metrics.metrics as metrics
 from dataset.subsetSC import SubsetSC
@@ -13,7 +7,7 @@ from models.spectrogram_model import spectrogram_model
 from models.mel_model import *
 from models.M5 import *
 
-from utilsFunc import *
+from helper.utilsFunc import *
 import argparse
 from os import makedirs
 import os
@@ -70,8 +64,8 @@ def argument_parser():
 
     parser.add_argument("--predict", action="store_true",
                         help="Load weights to predict the mask of a randomly selected image from the test set")
-    parser.add_argument("--log_interval", type=int, default=20,
-                        help="The log interval of the training batch. Accepts multiple space-seperated values for hyperparameter search (--log_interval 5 10 20)")
+    parser.add_argument("--log_interval", type=int, default=200,
+                        help="The log interval of the training batch.")
     parser.add_argument("--load_checkpoint", nargs="+", type=str,
                         help="Location of a training checkpoint to load")
     parser.add_argument("--save_checkpoint", nargs="+", type=str,
@@ -135,6 +129,9 @@ def main():
     storage = dict()
     storage['device'] = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print('Using :', storage['device'])
+
+    print('setting up',args.exp_name)
+    storage['exp_name']=args.exp_name
 
 
     #Downloading the DATASET
@@ -240,6 +237,7 @@ def main():
             waveform_size = storage['transform'][-1](storage['waveform']).shape
             storage['model'].append(M5( n_output=len(test_set.labels if args.predict else train_set.labels)) )
             storage['model'][-1].to(storage['device'])
+
             print('M5 model setup')
         elif model == spect_model:
             #setting up the correct transform
@@ -350,12 +348,16 @@ def main():
                 storage['pbar'] = pbar
                 for epoch in range(1, storage['n_epoch'][currentOrLast(exp_i,storage['n_epoch'])] + 1):
                     storage['epoch'] = epoch
+
+                    #logs :
+                    #storage['writer'].add_hparams
+
                     if not args.predict :
                         train(storage,exp_i)
                         if not args.no_validation:
                             train(storage,exp_i,True)
                             storage['scheduler'][exp_i].step()
-                        # Do the saving accuracy_wise
+                        # SAVE THE MODEL accuracy-wise
                         if args.save_checkpoint and best_model_stats < storage['accuracy']:
                             torch.save(storage['model'][exp_i].state_dict(),
                                        args.exp_name + '/' + args.save_checkpoint[
@@ -365,8 +367,10 @@ def main():
                     else :
                         test(storage,exp_i)
 
-            # TODO : rajouter l'accuracy
-            if not args.predict and (not args.nosaveplot  or args.noshowplot):
+                storage['writer'].flush()
+
+            # TODO : to delete, old way to save figures
+            '''if not args.predict and (not args.nosaveplot  or args.noshowplot):
                 if not args.no_validation:
                     fig, axs = plt.subplots(2)
                     axs[1].plot(storage['losses_val'][exp_i], label='validation loss')
@@ -384,10 +388,12 @@ def main():
                 if not args.nosaveplot  :
                     savename = args.save_checkpoint[currentOrLast(exp_i, args.save_checkpoint)] if args.save_checkpoint else \
                         args.model[exp_i]+'_'+str(exp_i)
-                    plt.savefig(args.exp_name + '/' +savename+'.png' )
-                    print('saving plot :',args.exp_name + '/' +savename+'.png' )
+                    saveFigLoc='fig/' +args.exp_name + '/' +savename+'.png'
+                    plt.savefig(saveFigLoc )
+                    print(saveFigLoc )
                 if not args.noshowplot :
-                    plt.show()
+                    plt.show()'''
+
 
     storage['writer'].close()
 
