@@ -17,8 +17,6 @@ tar -xf $archiveFile --directory $archiveDir
 
 source ~/venv/bin/activate
 python main.py --model MFCC --save_checkpoint MFCC --num-epochs 100 --exp_name MFCC
-python main.py --model M5 --save_checkpoint M5 --num-epochs 100 --exp_name M5
-python main.py --model spect --save_checkpoint spect --num-epochs 100 --exp_name spect
 
 
 deactivate

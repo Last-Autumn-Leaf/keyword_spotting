@@ -27,6 +27,7 @@ class mel_model(nn.Module):
         if size_tensor.ndim==3 :
             size_tensor=size_tensor[None,:]
         size_tensor = self.conv1(size_tensor)
+        size_tensor = self.seq(size_tensor)
         size_tensor = self.conv2(size_tensor)
         size_tensor = self.flatten(size_tensor).shape[-1]
         if debug:
