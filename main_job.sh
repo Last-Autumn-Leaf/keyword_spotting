@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=10:00:00
+#SBATCH --time=15:00:00
 #SBATCH --account=def-seanwood
 #SBATCH --output=./logs/main_%j.out
 #SBATCH --gpus-per-node=1
@@ -16,6 +16,9 @@ mkdir -p $archiveDir
 tar -xf $archiveFile --directory $archiveDir
 
 source ~/venv/bin/activate
-python main.py --model PDM mel --save_checkpoint PDM mel --num-epochs 100 --lr 0.000005 --pdm_factor 48 --exp_name testU
+python main.py --model MFCC --save_checkpoint MFCC --num-epochs 100 --exp_name MFCC
+python main.py --model M5 --save_checkpoint M5 --num-epochs 100 --exp_name M5
+python main.py --model spect --save_checkpoint spect --num-epochs 100 --exp_name spect
+
 
 deactivate
