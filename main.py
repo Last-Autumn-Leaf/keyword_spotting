@@ -350,7 +350,7 @@ def storeInputForm(storage):
     if storage['input'].ndim == 3:
         plt.imshow(storage['input'].log2()[0].detach().cpu().numpy())
     elif storage['input'].ndim == 2:
-        plt.plot(storage['input'].t().numpy())
+        plt.plot(storage['input'].t().cpu().numpy())
     else:
         raise Exception('error on the shape of the input' + str(storage['input'].shape))
     name = storage['model_name'] + '/' + storage['exp_name'] + '/Input'
