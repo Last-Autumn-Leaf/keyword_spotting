@@ -247,15 +247,7 @@ def main():
     # Storing the input form :
     storage['input']= storage['transform'](storage['waveform'])
     if storage['exp_index'] ==0 :
-        fig = plt.figure()
-        if storage['input'].ndim==3 :
-            plt.imshow(storage['input'].log2()[0].detach().numpy())
-        elif storage['input'].ndim==2 :
-            plt.plot(storage['input'].t().numpy())
-        else :
-            raise Exception('error on the shape of the input' + str(storage['input'].shape))
-        name = storage['model_name'] + '/' + storage['exp_name'] + '/Input'
-        storage['writer'].add_figure(name, fig)
+        storeInputForm(storage)
 
 
     
@@ -336,7 +328,7 @@ def storeWeights(storage,epoch=0):
 
     # This supposed that every model got their first layer named conv1
     print('storing the weights')
-    FirstLayerWeights = storage['model'].conv1.weight.detach().numpy()
+    FirstLayerWeights = storage['model'].conv1.weight.detach().cpu().numpy()
     fig = PlotKernelFunc(FirstLayerWeights)
     name = storage['base_name'] + '/Weights'
     storage['writer'].add_figure(name, fig,epoch)
@@ -352,5 +344,16 @@ def storeFeatureMaps(storage,epoch=0):
     fig = PlotKernelFunc(featureMap)
     name = storage['base_name'] + '/FeatureMaps'
     storage['writer'].add_figure(name, fig,epoch)
+
+def storeInputForm(storage):
+    fig = plt.figure()
+    if storage['input'].ndim == 3:
+        plt.imshow(storage['input'].log2()[0].detach().cpu().numpy())
+    elif storage['input'].ndim == 2:
+        plt.plot(storage['input'].t().numpy())
+    else:
+        raise Exception('error on the shape of the input' + str(storage['input'].shape))
+    name = storage['model_name'] + '/' + storage['exp_name'] + '/Input'
+    storage['writer'].add_figure(name, fig)
 if __name__ == '__main__':
     main()
