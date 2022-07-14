@@ -2,12 +2,22 @@ import time
 import functools
 from datetime import timedelta
 import matplotlib.pyplot as plt
+
 import numpy as np
 import numpy.fft as fft
 
 #Decorator Function
 import torch
 import torchaudio
+
+#MACRO :
+
+spect_model='spect'
+M5_model='M5'
+MFCC_MODEL= 'MFCC'
+PDM_MODEL='PDM'
+spect_MEL='mel'
+
 
 
 def timeThis(func):
@@ -58,7 +68,7 @@ def plotFFT(tensor,fe=8000,ax=None):
   else:
     ax.plot(freq,abs(spectrum))
 
-def plot_kernels1D(tensor,FFT=False,fe=8000,plotName=False,save=None):
+def plot_kernels1D(tensor,FFT=False,fe=8000,plotName=False):
   if tensor.ndim==2:
     tensor=tensor[:,None,:]
 
@@ -76,28 +86,31 @@ def plot_kernels1D(tensor,FFT=False,fe=8000,plotName=False,save=None):
     a.axis('off')
     if plotName:
       a.set_title('kernel'+str(i))
-  if save != None :
-      plt.savefig(save+ '.png')
-  plt.show()
+  return fig
 
-def plot_kernels2D(tensor,plotName=False,transpose=False,save=None):
-  if tensor.ndim==3 :
-      tensor=tensor[:,None,:]
+def plot_kernels2D(FirstLayerWeights):
+  if FirstLayerWeights.ndim==3 :
+      FirstLayerWeights=FirstLayerWeights[:,None,:]
 
-  if not tensor.ndim==4:
+  if not FirstLayerWeights.ndim==4:
       raise Exception("assumes a 4D tensor")
-  num_kernels = tensor.shape[0]
-  sep=int(np.ceil(np.sqrt(num_kernels)))
-  fig = plt.figure(figsize=(sep, sep),dpi=500)
+  num_kernels = FirstLayerWeights.shape[0]
+  sep_x = FirstLayerWeights.shape[-1]
+  sep_y = FirstLayerWeights.shape[-2]
+  sep = int(np.ceil(np.sqrt(num_kernels)))
+
+  fig = plt.figure(figsize=(sep_x, sep_y))
   for i in range(num_kernels):
-    a=fig.add_subplot(sep, sep, i+1)
-    a.imshow(tensor[i,0].T if transpose else tensor[i,0])
-    a.axis('off')
-    if plotName:
-      a.set_title('kernel'+str(i))
-  if save != None :
-      plt.savefig(save+ '.png')
-  plt.show()
+      # i = i + 1 # grid spec indexes from 0
+      ax1 = fig.add_subplot(sep, sep, i + 1)
+      ax1.imshow(FirstLayerWeights[i, 0])
+      plt.axis('off')
+      ax1.set_xticklabels([])
+      ax1.set_yticklabels([])
+      ax1.set_aspect('equal')
+
+  fig.tight_layout()
+  return fig
 
 
 def train(storage,validation=False):
@@ -121,7 +134,7 @@ def train(storage,validation=False):
             loss.backward()
             storage['optimizer'].step()
 
-        name= storage['model_name']+'/'+storage['exp_name']+'/'+str(storage['exp_index']) +'/Loss/'+mode
+        name= storage['base_name'] +'/Loss/'+mode
         storage['writer'].add_scalar(name , loss.item(),storage[mode+'_index'])
         storage[mode+'_index'] += 1
 
@@ -136,7 +149,7 @@ def train(storage,validation=False):
 
     storage['accuracy']=100.*correct/len(storage[mode+'_loader'].dataset)
     if validation:
-        storage['writer'].add_scalar(storage['model_name']+'/'+storage['exp_name']+'/'+str(storage['exp_index'])+'/Accuracy/val', storage['accuracy'], storage['acc_index'])
+        storage['writer'].add_scalar(storage['base_name']+'/Accuracy/val', storage['accuracy'], storage['acc_index'])
         storage['acc_index'] += 1
         print(
             f"\nvalidation Epoch: {storage['current_epoch']}\tAccuracy: {correct}/{len(storage[mode+'_loader'].dataset)} "
@@ -163,7 +176,7 @@ def test(storage):
     print(
         f"\nTest Epoch: {storage['current_epoch']}\tAccuracy: {correct}/{len( storage['test_loader'].dataset)} "
         f"({correct_percent:.0f}%)\n")
-    storage['writer'].add_scalar(storage['model_name']+'/'+storage['exp_name']+'/'+str(storage['exp_index'])+'/Accuracy/pred', correct_percent,)
+    storage['writer'].add_scalar(storage['base_name']+'/Accuracy/pred', correct_percent)
 
 
 def space_frequency(image):

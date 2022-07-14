@@ -18,11 +18,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 print( 'We are the',datetime.today().strftime('%d-%m-%Y %H:%M:%S') )
 print('imports done')
-spect_model='spect'
-M5_model='M5'
-MEL_MODEL='MFCC'
-PDM_MODEL='PDM'
-spect_MEL='mel'
+
 new_sample_rate=8000
 pdm_factor=10
 
@@ -40,8 +36,8 @@ def argument_parser():
                         help="Name of experiment")
     parser.add_argument("--exp_index", type=int, default=0,
                         help="index of experiment")
-    parser.add_argument("--model", type=str,   default=spect_model,
-                        choices=[M5_model, spect_model, MEL_MODEL,PDM_MODEL,spect_MEL])
+    parser.add_argument("--model", type=str, default=spect_model,
+                        choices=[M5_model, spect_model, MFCC_MODEL, PDM_MODEL, spect_MEL])
     parser.add_argument("--batch_size",   type=int, default=100,
                         help="The size of the training batch.")
     parser.add_argument("--optimizer", type=str, default="Adam", choices=["Adam", "SGD"],
@@ -70,8 +66,8 @@ def argument_parser():
                         help="The log interval of the training batch.")
     parser.add_argument("--load_checkpoint",   type=str,
                         help="Location of a training checkpoint to load")
-    parser.add_argument("--save_checkpoint",   type=str,
-                        help="Location of a training checkpoint to save")
+    parser.add_argument("--nosavemodel", action="store_true",
+                        help="don't save the model")
     parser.add_argument("--COLAB", action="store_true",
                         help="Change the root for storing the dataset")
     parser.add_argument("--no_validation", action="store_true",
@@ -85,7 +81,7 @@ def argument_parser():
     parser.add_argument("--without_pickled_data", action="store_true",
                         help="don't use pickle to load dataset")
 
-    parser.add_argument("--fe", type=int, default=16000,
+    parser.add_argument("--fe", type=int, default=new_sample_rate,
                         help="Sampling frequency in Hz")
     parser.add_argument("--n_mels", type=int, default=50,
                         help="numbers of mel filters")
@@ -115,6 +111,7 @@ def main():
     #Mode :
     storage['predict']=args.predict
     storage['no_validation']=args.no_validation
+    storage['nosavemodel']=args.nosavemodel
 
     #H-PARAM
     storage['batch_size'] = args.batch_size
@@ -176,7 +173,12 @@ def main():
 
     storage['waveform']=storage['waveform'].to(storage['device'])
 
+    # TensorBoards :
+    storage['writer'] = SummaryWriter('runs/' + storage['exp_name'] + '/' + str(storage['exp_index']))
+    print("saving tensorboard in runs/" + storage['exp_name'])
 
+    #1D transform param
+    storage['fe']=args.fe
 
     # 2D transform params
     storage['n_mels'] = args.n_mels
@@ -188,11 +190,11 @@ def main():
 
 
     # setting up the transforms and model
-    storage['model_name']= args.model
+    storage['model_name'] = args.model
+    storage['base_name'] =storage['model_name'] + '/' + storage['exp_name'] + '/' + str(storage['exp_index'])
     
     if  storage['model_name'] == M5_model :
-        #TODO : change new sample rate
-        storage['transform'] = torchaudio.transforms.Resample(orig_freq=storage['sample_rate'], new_freq=new_sample_rate).to(storage['device'])
+        storage['transform'] = torchaudio.transforms.Resample(orig_freq=storage['sample_rate'], new_freq=storage['fe']).to(storage['device'])
         
         # setting up the model
         waveform_size = storage['transform'](storage['waveform']).shape
@@ -218,7 +220,7 @@ def main():
                                           n_output=len(train_set.labels if not storage['predict'] else test_set.labels)).to(storage['device'])
         
         print('MEL spectrogram model setup')
-    elif storage['model_name'] == MEL_MODEL :
+    elif storage['model_name'] == MFCC_MODEL :
         storage['transform'] = torchaudio.transforms.MFCC(melkwargs={
             "n_fft": storage['n_fft'],
             "n_mels": storage['n_mels'],
@@ -242,6 +244,20 @@ def main():
     else :
         raise Exception(storage['model_name'] +" not implemented")
 
+    # Storing the input form :
+    storage['input']= storage['transform'](storage['waveform'])
+    if storage['exp_index'] ==0 :
+        fig = plt.figure()
+        if storage['input'].ndim==3 :
+            plt.imshow(storage['input'].log2()[0].detach().numpy())
+        elif storage['input'].ndim==2 :
+            plt.plot(storage['input'].t().numpy())
+        else :
+            raise Exception('error on the shape of the input' + str(storage['input'].shape))
+        name = storage['model_name'] + '/' + storage['exp_name'] + '/Input'
+        storage['writer'].add_figure(name, fig)
+
+
     
     # Define the optimizer, loss function & metrics
     
@@ -258,7 +274,7 @@ def main():
 
     # Define the log interval and epochs
     storage['log_interval'] = args.log_interval
-    storage[' num_epochs'] = args.num_epochs
+    storage['num_epochs'] = args.num_epochs
 
     # loading the saved model
     print('Launching exp:', storage['exp_name'], 'index',storage['exp_index'])
@@ -266,49 +282,75 @@ def main():
         storage['model'].load_state_dict( torch.load( storage['exp_name'] + '/' + args.load_checkpoint,map_location=storage['device'] ) )
 
     if not storage['predict'] :
-        makedirs(storage['exp_name'], exist_ok=True)
+        if not storage['nosavemodel']:
+            makedirs('./saved_models/'+storage['model_name'] + '/' + storage['exp_name'], exist_ok=True)
         if storage['no_validation'] :
             storage['pbar_update'] = np.round(1 / len(storage['train_loader']),3)
-
         else :
             storage['pbar_update'] = np.round(1 / ( len(storage['train_loader']) + len(storage['val_loader']) ) ,3)
-
     else :
         storage['pbar_update'] = np.round(1 / (len(storage['test_loader'])), 3)
 
-    # TensorBoards :
-    storage['writer'] = SummaryWriter('runs/'+storage['exp_name']+'/'+str(storage['exp_index']))
-    print("saving tensorboard in runs/"+storage['exp_name'])
+
     with timeThat('main program'):
-        storage['best_accuracy']=0
-        with tqdm(total=storage[' num_epochs']) as pbar:
-            storage['pbar'] = pbar
-            storage['train_index']=0
-            storage['val_index']=0
-            storage['acc_index']=0
+        with tqdm(total=storage['num_epochs']) as pbar:
+            if not storage['predict']:
 
-            for epoch in range(1, storage[' num_epochs']+ 1):
-                storage['current_epoch'] = epoch
+                storage['best_accuracy'] = 0
+                storage['pbar'] = pbar
+                storage['train_index'] = 0
+                storage['val_index'] = 0
+                storage['acc_index'] = 0
+                for epoch in range(1, storage['num_epochs']+ 1):
+                    storage['current_epoch'] = epoch
 
-                if not storage['predict'] :
                     train(storage)
                     if not storage['no_validation']:
                         train(storage,validation=True)
                         storage['scheduler'].step()
 
                     # SAVE THE MODEL accuracy-wise
-                    if args.save_checkpoint and storage['best_accuracy'] < storage['accuracy']:
-                        namefile=storage['exp_name'] + '/' + args.save_checkpoint+'.pt'
+                    if not storage['nosavemodel'] and storage['best_accuracy'] < storage['accuracy']:
+                        namefile='./saved_models/'+storage['model_name']+'/'+storage['exp_name']+'/'+str(storage['exp_index'])+'.pt'
                         torch.save(storage['model'].state_dict(),namefile)
-                        print('saving model',namefile)
+                        print('saving model at',namefile, 'with accuracy=',storage['accuracy'])
                         storage['best_accuracy'] = storage['accuracy']
 
-                else :
-                    test(storage)
+            else :
+                test(storage)
 
             storage['writer'].flush()
+    if not storage['predict']:
+        storeWeights(storage)
+        storeFeatureMaps(storage)
+        storage.save_hparams()
+
+
     storage['writer'].close()
 
+def storeWeights(storage,epoch=0):
+    if storage['input'].ndim == 3:
+        PlotKernelFunc = plot_kernels2D
+    elif storage['input'].ndim == 2:
+        PlotKernelFunc = plot_kernels1D
 
+    # This supposed that every model got their first layer named conv1
+    print('storing the weights')
+    FirstLayerWeights = storage['model'].conv1.weight.detach().numpy()
+    fig = PlotKernelFunc(FirstLayerWeights)
+    name = storage['base_name'] + '/Weights'
+    storage['writer'].add_figure(name, fig,epoch)
+
+def storeFeatureMaps(storage,epoch=0):
+    if storage['input'].ndim == 3:
+        PlotKernelFunc = plot_kernels2D
+    elif storage['input'].ndim == 2:
+        PlotKernelFunc = plot_kernels1D
+
+    print('storing the Feature maps')
+    featureMap = storage['model'].conv1(storage['input'])[:, None].detach()
+    fig = PlotKernelFunc(featureMap)
+    name = storage['base_name'] + '/FeatureMaps'
+    storage['writer'].add_figure(name, fig,epoch)
 if __name__ == '__main__':
     main()
