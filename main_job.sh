@@ -16,7 +16,6 @@ mkdir -p $archiveDir
 tar -xf $archiveFile --directory $archiveDir
 
 source ~/venv/bin/activate
-python main.py --model MFCC --num-epochs 100 --exp_name test
-python main.py --model mel --num-epochs 100 --exp_name test
-python main.py --model M5 --num-epochs 100 --exp_name test
+python main.py --model PDM --num-epochs 100 --exp_name test
+python main.py --model spect --num-epochs 100 --exp_name test
 deactivate
