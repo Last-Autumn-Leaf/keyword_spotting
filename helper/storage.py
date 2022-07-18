@@ -1,5 +1,5 @@
 from helper.utilsFunc import *
-
+import torch.nn as nn
 
 class Storage:
     hprams=['lr','batch_size','num_epochs','weight_decay','step_size','gamma']
@@ -10,6 +10,7 @@ class Storage:
     hparams_MFCC=hparams_MEL.copy()
     hparams_MFCC.remove('win_length')
     hparams_M5=['fe']
+    layers_to_record = [nn.Conv1d, nn.Conv2d,nn.Linear]
     def __init__(self,exp_name='nameless_exp',exp_index=0):
         self.data={'exp_name':exp_name,
                    'exp_index':exp_index}
@@ -36,12 +37,23 @@ class Storage:
             raise Exception('hparams for model '+self.data['model_name']+' not found !')
 
         hparam_dict={ key:self.data[key] for key in true_param}
-        metric_dict={'accuracy':self.data['best_accuracy']}
+        metric_dict={self.data['base_name']+'/Accuracy/best':self.data['best_accuracy'],
+                     self.data['base_name']+'/time':self.data['completed_time']}
 
+        layers = [module for module in self.data['model'].modules() if not isinstance(module, nn.Sequential)]
+        hparam_layer = {}
+        index = 0
+        for layer in layers:
+            if type(layer) in self.layers_to_record:
+                hparam_layer['layer' + str(index)] = str(layer)
+                index += 1
+
+        #weird behavior of creating a new folder
         self.data['writer'].add_hparams(
-            hparam_dict,metric_dict,
+            hparam_dict | hparam_layer,metric_dict,
             run_name=self.data['base_name']
         )
+
 
 
 

@@ -173,9 +173,7 @@ def main():
 
     storage['waveform']=storage['waveform'].to(storage['device'])
 
-    # TensorBoards :
-    storage['writer'] = SummaryWriter('runs/' + storage['exp_name'] + '/' + str(storage['exp_index']))
-    print("saving tensorboard in runs/" + storage['exp_name'])
+
 
     #1D transform param
     storage['fe']=args.fe
@@ -187,11 +185,14 @@ def main():
     storage['n_fft'] = args.n_fft
     storage['pdm_factor']=args.pdm_factor
 
-
-
     # setting up the transforms and model
     storage['model_name'] = args.model
     storage['base_name'] =storage['model_name'] + '/' + storage['exp_name'] + '/' + str(storage['exp_index'])
+
+    # TensorBoards :
+    storage['writer'] = SummaryWriter('runs/' + storage['exp_name'] + '/' + str(storage['exp_index']),
+                                      filename_suffix=storage['base_name'].replace('/','_'))
+    print("saving tensorboard in runs/" + storage['exp_name'])
     
     if  storage['model_name'] == M5_model :
         storage['transform'] = torchaudio.transforms.Resample(orig_freq=storage['sample_rate'], new_freq=storage['fe']).to(storage['device'])
@@ -284,7 +285,7 @@ def main():
         storage['pbar_update'] = np.round(1 / (len(storage['test_loader'])), 3)
 
 
-    with timeThat('main program'):
+    with timeThat('main program',storage):
         with tqdm(total=storage['num_epochs']) as pbar:
             if not storage['predict']:
 
@@ -317,7 +318,6 @@ def main():
         storeFeatureMaps(storage)
         storage.save_hparams()
 
-
     storage['writer'].close()
 
 def storeWeights(storage,epoch=0):
@@ -340,7 +340,7 @@ def storeFeatureMaps(storage,epoch=0):
         PlotKernelFunc = plot_kernels1D
 
     print('storing the Feature maps')
-    featureMap = storage['model'].conv1(storage['input'])[:, None].detach()
+    featureMap = storage['model'].conv1( storage['input'] )[:, None].detach().cpu().numpy()
     fig = PlotKernelFunc(featureMap)
     name = storage['base_name'] + '/FeatureMaps'
     storage['writer'].add_figure(name, fig,epoch)

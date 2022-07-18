@@ -48,13 +48,15 @@ class timeThat(object):
 
 from contextlib import contextmanager
 @contextmanager
-def timeThat(name=''):
+def timeThat(name='',storage=None):
     try:
         start = time.time()
         yield ...
     finally:
         end = time.time()
         print(name+' finished in ',timedelta(seconds=end-start))
+        if storage != None :
+            storage['completed_time']= int((end-start)/60 )
 
 def plotFFT(tensor,fe=8000,ax=None):
   tensor-= tensor.mean()

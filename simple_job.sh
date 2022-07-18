@@ -18,4 +18,4 @@ tar -xf $archiveFile --directory $archiveDir
 source ~/venv/bin/activate
 
 #---------------
-python test.py $SLURM_ARRAY_TASK_ID
+python main.py --model PDM --num-epochs 1 --exp_name delthis
