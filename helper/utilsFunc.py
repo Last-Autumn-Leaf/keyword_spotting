@@ -13,7 +13,7 @@ import torchaudio
 #MACRO :
 
 spect_model='spect'
-M5_model='M5'
+M5_model='PDM_model'
 MFCC_MODEL= 'MFCC'
 PDM_MODEL='PDM'
 spect_MEL='mel'
@@ -186,7 +186,6 @@ def space_frequency(image):
     freqy = np.fft.fftfreq(image.shape[1])
     image_fft = np.fft.fft2(image)
 
-
 def showResult(model):
     FirstLayerWeights = model.conv1.weight.detach().cpu().numpy()
     plot_kernels1D(FirstLayerWeights)
@@ -194,8 +193,6 @@ def showResult(model):
     SecondLayerWeights =model.conv2.weight.detach().cpu().numpy()
     plot_kernels1D(SecondLayerWeights)
     plot_kernels1D(SecondLayerWeights, True)
-
-
 
 class PdmTransform(torch.nn.Module):
     def __init__(self, orig_freq: int = 16000,pdm_factor: int = 48,signal_len:int=16000):
@@ -235,9 +232,8 @@ class PdmTransform(torch.nn.Module):
     def __repr__(self):
         return "custom PDM transform, does the rescale and the transform"
 
-
-
 currentOrLast = lambda c,lst: c if c <len(lst) else -1
+
 if __name__=='__main__':
     with timeThat() :
         print('hello')

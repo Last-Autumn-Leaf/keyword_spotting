@@ -4,6 +4,7 @@ import metrics.metrics as metrics
 from dataset.subsetSC import SubsetSC
 #import models
 from helper.storage import Storage
+from models.PDM_model import PDM_model
 from models.spectrogram_model import spectrogram_model
 from models.mel_model import *
 from models.M5 import *
@@ -28,7 +29,7 @@ def argument_parser():
         datasets and differents parameters
     """
     parser = argparse.ArgumentParser(usage="\n python3 main.py [model] [hyper_parameters]"
-                                           "\n python3 main.py --model M5 [hyper_parameters]"
+                                           "\n python3 main.py --model PDM_model [hyper_parameters]"
                                             "\n python3 main.py [model] --predict [load_checkpoint]",
                                      description="This program allows to train different models of classification.")
 
@@ -57,8 +58,17 @@ def argument_parser():
                         help="gamma of scheduler. ")
 
     # MODEL PARAMS
+
+    # stride,n_channel,kernel_size,dilation
+    parser.add_argument("--stride", type=int, default=1)
+    parser.add_argument("--n_channel", type=int, default=32)
+    parser.add_argument("--kernel_size", type=int, default=80)
+    parser.add_argument("--dilation", type=int, default=1)
+
+
     parser.add_argument("--pdm_factor", type=int, default=pdm_factor,
                         help="pdm factor when using PDM model, by default set to 48 ")
+
 
     parser.add_argument("--predict", action="store_true",
                         help="Load weights to predict the mask of a randomly selected image from the test set")
@@ -73,34 +83,22 @@ def argument_parser():
     parser.add_argument("--no_validation", action="store_true",
                         help="Will not do the validation")
 
-    '''parser.add_argument("--noshowplot", action="store_true",
-                        help="don't show plot")
-    parser.add_argument("--nosaveplot", action="store_true",
-                        help="don't save plot")'''
-
-    parser.add_argument("--without_pickled_data", action="store_true",
-                        help="don't use pickle to load dataset")
-
     parser.add_argument("--fe", type=int, default=new_sample_rate,
                         help="Sampling frequency in Hz")
     parser.add_argument("--n_mels", type=int, default=50,
                         help="numbers of mel filters")
     # This should be put LAST on the parser
-    parser.add_argument("--win_length", type=int, default=int(30e-3 * parser.parse_args().fe),
+    parser.add_argument("--win_length", type=int, default=int(30e-3 * new_sample_rate),
                         help="Window length")
-    parser.add_argument("--hop_length", type=int, default=int(10e-3 * parser.parse_args().fe),
+    parser.add_argument("--hop_length", type=int, default=int(10e-3 * new_sample_rate),
                         help="hop length")
-    parser.add_argument("--n_fft", type=int, default=parser.parse_args().win_length,
+    parser.add_argument("--n_fft", type=int, default=int(30e-3 * new_sample_rate),
                         help="n_fft")
 
     
-    return parser.parse_args()
+    return parser
 
-
-def main():
-    print('parsing variables...')
-    args = argument_parser()
-
+def main(args):
 
     # We use a dictionnary-like data type to stored usefull variables.
     print('setting up exp:', args.exp_name)
@@ -178,6 +176,14 @@ def main():
     #1D transform param
     storage['fe']=args.fe
 
+    #models params
+    storage['stride']=args.stride
+    storage['n_channel']=args.n_channel
+    storage['kernel_size']=args.kernel_size
+    storage['dilation']=args.dilation
+
+
+
     # 2D transform params
     storage['n_mels'] = args.n_mels
     storage['win_length'] = args.win_length
@@ -201,7 +207,7 @@ def main():
         waveform_size = storage['transform'](storage['waveform']).shape
         storage['model']= M5( n_output=len(test_set.labels if storage['predict'] else train_set.labels)).to(storage['device'])
         
-        print('M5 model setup')
+        print('PDM_model model setup')
     elif  storage['model_name'] == spect_model:
         storage['transform']=torchaudio.transforms.Spectrogram(n_fft=storage['n_fft'],win_length=storage['win_length'],
                                                                hop_length= storage['hop_length'] ).to(storage['device'])
@@ -238,7 +244,8 @@ def main():
                                    orig_freq=storage['sample_rate']).to(storage['device'])
 
         waveform_size = storage['transform'](storage['waveform']).shape
-        storage['model']=M5( n_output=len(test_set.labels if storage['predict'] else train_set.labels)) .to(storage['device'])
+        storage['model']=PDM_model( n_output=len(test_set.labels if storage['predict'] else train_set.labels)) .to(storage['device'],
+            stride=storage['stride'],n_channel=storage['n_channel'],kernel_size=storage['kernel_size'],dilation=storage['dilation'])
         
         print('PDM model setup')
 
@@ -355,5 +362,8 @@ def storeInputForm(storage):
         raise Exception('error on the shape of the input' + str(storage['input'].shape))
     name = storage['model_name'] + '/' + storage['exp_name'] + '/Input'
     storage['writer'].add_figure(name, fig)
+
+
 if __name__ == '__main__':
-    main()
+    args = argument_parser()
+    main(args)
