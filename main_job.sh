@@ -5,7 +5,7 @@
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=16G
-
+#SBATCH --array=1-10
 #Variables
 myDir="/home/yoogo/projects/def-seanwood/yoogo/mywork/keyword_spotting"
 archiveFile="$myDir/speech_commands_v0.02.tar.gz"
@@ -16,6 +16,5 @@ mkdir -p $archiveDir
 tar -xf $archiveFile --directory $archiveDir
 
 source ~/venv/bin/activate
-python main.py --model PDM --num-epochs 100 --exp_name test
-python main.py --model spect --num-epochs 100 --exp_name test
+python run_array/run_array_PDM.py $SLURM_ARRAY_TASK_ID
 deactivate
