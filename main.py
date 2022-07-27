@@ -244,8 +244,8 @@ def main(args):
                                    orig_freq=storage['sample_rate']).to(storage['device'])
 
         waveform_size = storage['transform'](storage['waveform']).shape
-        storage['model']=PDM_model( n_output=len(test_set.labels if storage['predict'] else train_set.labels)) .to(storage['device'],
-            stride=storage['stride'],n_channel=storage['n_channel'],kernel_size=storage['kernel_size'],dilation=storage['dilation'])
+        storage['model']=PDM_model( n_output=len(test_set.labels if storage['predict'] else train_set.labels),
+            stride=storage['stride'],n_channel=storage['n_channel'],kernel_size=storage['kernel_size'],dilation=storage['dilation']).to(storage['device'])
         
         print('PDM model setup')
 
