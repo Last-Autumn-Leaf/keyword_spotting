@@ -1,6 +1,4 @@
-import itertools
-import os
-import collections
+
 import random
 import sys
 
