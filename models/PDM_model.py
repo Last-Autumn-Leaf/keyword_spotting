@@ -42,15 +42,17 @@ def try_param(PDM_factor=10,n_channel=10,stride=4,kernel_size=1600,dilation=1,de
         return False
     depth+=1
 
+    device =torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = "cpu"
     input_size = 16000 * PDM_factor
-    in_test = torch.zeros((1, 1, input_size)).to( torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    in_test = torch.zeros((1, 1, input_size)).to(device )
 
     try :
-        a = PDM_model(stride=stride, n_channel=n_channel, kernel_size=kernel_size, dilation=dilation).to( torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        a = PDM_model(stride=stride, n_channel=n_channel, kernel_size=kernel_size, dilation=dilation).to( device)
         output = a(in_test)
         print('test passed,', a.count_parameters(), 'parameters')
         return (stride, n_channel, kernel_size, dilation)
-    except RuntimeError as e:
+    except Exception as e:
         if kernel_size <MIN_KERNEL_SIZE :
             print('stopping the search :\n','min kernel size reached')
             return False

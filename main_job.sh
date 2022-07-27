@@ -5,7 +5,7 @@
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=16G
-#SBATCH --array=1-100
+#SBATCH --array=1-5
 #Variables
 myDir="/home/yoogo/projects/def-seanwood/yoogo/mywork/keyword_spotting"
 archiveFile="$myDir/speech_commands_v0.02.tar.gz"
