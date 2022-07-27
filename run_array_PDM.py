@@ -11,9 +11,9 @@ MIN_LR =0.000001
 MAX_weight_decay=MAX_LR/10
 MIN_weight_decay=MIN_LR/10
 
-DILATION = (1,50)
-KERNEL=(100,1000)
-STRIDE=(4,50)
+DILATION = (1,10)
+KERNEL=(50,1000)
+STRIDE=(4,10)
 
 #random.randint() can be
 def createParams():
@@ -48,7 +48,8 @@ def validate(depth=0):
     kernel_size=PDM_search_dict['--kernel_size']
     dilation=PDM_search_dict['--dilation']
 
-    a=try_param(pdm_factor,stride,n_channel,kernel_size,dilation)
+    a=try_param(PDM_factor=pdm_factor,stride=stride,
+                n_channel=n_channel,kernel_size=kernel_size,dilation=dilation)
     if a == False :
         #reset_dict
         PDM_search_dict = createParams()
