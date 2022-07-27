@@ -12,7 +12,7 @@ MAX_weight_decay=MAX_LR/10
 MIN_weight_decay=MIN_LR/10
 
 DILATION = (1,50)
-KERNEL=(100,10000)
+KERNEL=(100,1000)
 STRIDE=(4,50)
 
 #random.randint() can be
