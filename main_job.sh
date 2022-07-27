@@ -16,5 +16,5 @@ mkdir -p $archiveDir
 tar -xf $archiveFile --directory $archiveDir
 
 source ~/venv/bin/activate
-python run_array/run_array_PDM.py $SLURM_ARRAY_TASK_ID
+python run_array_PDM.py $SLURM_ARRAY_TASK_ID
 deactivate
