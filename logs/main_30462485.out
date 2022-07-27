@@ -1,0 +1,26 @@
+We are the 27-07-2022 05:56:10
+imports done
+Traceback (most recent call last):
+  File "/lustre03/project/6066503/yoogo/mywork/keyword_spotting/run_array_PDM.py", line 83, in <module>
+    if validate() :
+  File "/lustre03/project/6066503/yoogo/mywork/keyword_spotting/run_array_PDM.py", line 51, in validate
+    a=try_param(pdm_factor,stride,n_channel,kernel_size,dilation)
+  File "/lustre03/project/6066503/yoogo/mywork/keyword_spotting/models/PDM_model.py", line 50, in try_param
+    output = a(in_test)
+  File "/home/yoogo/venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/lustre03/project/6066503/yoogo/mywork/keyword_spotting/models/PDM_model.py", line 29, in forward
+    x = self.second_layer(x)
+  File "/home/yoogo/venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/yoogo/venv/lib/python3.9/site-packages/torch/nn/modules/container.py", line 141, in forward
+    input = module(input)
+  File "/home/yoogo/venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/yoogo/venv/lib/python3.9/site-packages/torch/nn/modules/batchnorm.py", line 168, in forward
+    return F.batch_norm(
+  File "/home/yoogo/venv/lib/python3.9/site-packages/torch/nn/functional.py", line 2280, in batch_norm
+    _verify_batch_size(input.size())
+  File "/home/yoogo/venv/lib/python3.9/site-packages/torch/nn/functional.py", line 2248, in _verify_batch_size
+    raise ValueError("Expected more than 1 value per channel when training, got input size {}".format(size))
+ValueError: Expected more than 1 value per channel when training, got input size torch.Size([1, 42, 1])
