@@ -348,7 +348,9 @@ def storeFeatureMaps(storage,epoch=0):
 
     print('storing the Feature maps')
     input=storage['input'].detach().cpu()
-    featureMap = storage['model'].conv1( input )[:, None].detach().cpu().numpy()
+    FirstLayerWeights = storage['model'].conv1.weight.detach().cpu().numpy()
+
+    featureMap = FirstLayerWeights( input )[:, None].detach().cpu().numpy()
     fig = PlotKernelFunc(featureMap)
     name = storage['base_name'] + '/FeatureMaps'
     storage['writer'].add_figure(name, fig,epoch)
