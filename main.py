@@ -207,7 +207,7 @@ def main(args):
         waveform_size = storage['transform'](storage['waveform']).shape
         storage['model']= M5( n_output=len(test_set.labels if storage['predict'] else train_set.labels)).to(storage['device'])
         
-        print('PDM_model model setup')
+        print('M5 model setup')
     elif  storage['model_name'] == spect_model:
         storage['transform']=torchaudio.transforms.Spectrogram(n_fft=storage['n_fft'],win_length=storage['win_length'],
                                                                hop_length= storage['hop_length'] ).to(storage['device'])
