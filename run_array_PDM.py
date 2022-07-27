@@ -18,10 +18,10 @@ STRIDE=(20,1000)
 PDM_search_dict={
     '--exp_name' : 'test_PDM',
     '--model' : helper.utilsFunc.PDM_MODEL,
-    '--num_epochs' : 50,
-    '--PDM_factor ': 10,
-    '--lr ': MAX_LR / 100,
-    '--weight_decay ': MAX_LR / 1000,
+    '--num-epochs' : 50,
+    '--pdm_factor': 10,
+    '--lr': MAX_LR / 100,
+    '--weight_decay': MAX_LR / 1000,
 
     '--stride':random.randint(STRIDE[0],STRIDE[1]),
     '--n_channel':10,
@@ -35,9 +35,10 @@ def deploy(current_index):
         args_list.append(key)
         value=PDM_search_dict[key]
         if  isinstance(value,list):
-            args_list.append(value[helper.utilsFunc.currentOrLast(current_index, value)])
+            args_list.append(str(value[helper.utilsFunc.currentOrLast(current_index, value)]))
         else:
-            args_list.append(value)
+            args_list.append(str(value))
+    return args_list
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -45,5 +46,6 @@ if __name__ == '__main__':
         sys.argv = [sys.argv[0]]
         args = main.argument_parser()
         args=args.parse_args(deploy(current_index))
+        print('args: ',args)
         main.main(args)
 
