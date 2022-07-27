@@ -43,7 +43,6 @@ def try_param(PDM_factor=10,n_channel=10,stride=4,kernel_size=1600,dilation=1,de
     depth+=1
 
     device =torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = "cpu"
     input_size = 16000 * PDM_factor
     in_test = torch.zeros((1, 1, input_size)).to(device )
 
