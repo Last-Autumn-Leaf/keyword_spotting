@@ -20,7 +20,7 @@ def createParams():
     return {
         '--exp_name': 'test_PDM',
         '--model': helper.utilsFunc.PDM_MODEL,
-        '--num-epochs': 50,
+        '--num-epochs': 100,
         '--pdm_factor': 10,
         '--lr': MAX_LR / 100,
         '--weight_decay': MAX_LR / 1000,

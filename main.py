@@ -196,7 +196,8 @@ def main(args):
     storage['base_name'] =storage['model_name'] + '/' + storage['exp_name'] + '/' + str(storage['exp_index'])
 
     # TensorBoards :
-    storage['writer'] = SummaryWriter('runs/' + storage['exp_name'] + '/' + str(storage['exp_index']),
+    storage['writer_path']='runs/' + storage['exp_name'] + '/' + str(storage['exp_index'])
+    storage['writer'] = SummaryWriter(storage['writer_path'],
                                       filename_suffix=storage['base_name'].replace('/','_'))
     print("saving tensorboard in runs/" + storage['exp_name'])
     

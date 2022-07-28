@@ -1,3 +1,5 @@
+from torch.utils.tensorboard import SummaryWriter
+
 from helper.utilsFunc import *
 import torch.nn as nn
 
@@ -37,8 +39,8 @@ class Storage:
             raise Exception('hparams for model '+self.data['model_name']+' not found !')
 
         hparam_dict={ key:self.data[key] for key in true_param}
-        metric_dict={self.data['base_name']+'/Accuracy/best':self.data['best_accuracy'],
-                     self.data['base_name']+'/time':self.data['completed_time']}
+        metric_dict={'Accuracy/best':self.data['best_accuracy'],
+                     'Time':self.data['completed_time']}
 
         layers = [module for module in self.data['model'].modules() if not isinstance(module, nn.Sequential)]
         hparam_layer = {}
@@ -49,10 +51,12 @@ class Storage:
                 index += 1
 
         #weird behavior of creating a new folder
-        self.data['writer'].add_hparams(
+        self.data['writer_hpram'] = SummaryWriter(self.data['writer_path'])
+        self.data['writer_hpram'].add_hparams(
             hparam_dict | hparam_layer,metric_dict,
             run_name=self.data['base_name']
         )
+        self.data['writer_hpram'].close()
 
 
 
