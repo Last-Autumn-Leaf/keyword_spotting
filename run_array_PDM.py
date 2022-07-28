@@ -73,6 +73,8 @@ def deploy(current_index):
             args_list.append(str(value[helper.utilsFunc.currentOrLast(current_index, value)]))
         else:
             args_list.append(str(value))
+    args_list.append("--exp_index")
+    args_list.append(current_index)
     return args_list
 
 if __name__ == '__main__':
@@ -82,7 +84,7 @@ if __name__ == '__main__':
         args = main.argument_parser()
 
         if validate() :
-            args=args.parse_args(deploy(current_index))
+            args=args.parse_args(deploy(current_index) )
             print('args: ',args)
             main.main(args)
 
