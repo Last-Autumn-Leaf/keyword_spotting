@@ -1,0 +1,8 @@
+terminate called after throwing an instance of 'c10::Error'
+  what():  Calculated padded input size per channel: (124). Kernel size: (721). Kernel size can't be greater than actual input size
+Exception raised from check_shape_forward at /tmp/coulombc/pytorch_build_2021-11-10_08-09-16/avx2/python3.9/pytorch/aten/src/ATen/native/Convolution.cpp:529 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x55 (0x2b6284632905 in /home/yoogo/venv/lib/python3.9/site-packages/torch/lib/libc10.so)
+frame #1: c10::detail::torchCheckFail(char const*, char const*, unsigned int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) + 0xdb (0x2b6284614185 in /home/yoogo/venv/lib/python3.9/site-packages/torch/lib/libc10.so)
+frame #2: at::native::_convolution(at::Tensor const&, at::Tensor const&, c10::optional<at::Tensor> const&, c10::ArrayRef<long>, c10::ArrayRef<long>, c10::ArrayRef<long>, bool, c10::ArrayRef<long>, long, bool, bool, bool, bool) + 0x1ca6 (0x2b625f203b66 in /home/yoogo/venv/lib/python3.9/site-packages/torch/lib/libtorch_cpu.so)
+
+/var/spool/slurmd/job30528566/slurm_script: line 19: 35077 Aborted                 (core dumped) python run_array_PDM.py $SLURM_ARRAY_TASK_ID
