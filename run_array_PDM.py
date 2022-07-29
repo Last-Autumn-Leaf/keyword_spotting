@@ -11,22 +11,22 @@ MIN_LR =0.000001
 MAX_weight_decay=MAX_LR/10
 MIN_weight_decay=MIN_LR/10
 
-DILATION = (1,10)
-KERNEL=(50,1000)
-STRIDE=(4,10)
+DILATION = (1,20)
+KERNEL=(50,2000)
+STRIDE=(4,20)
 
 #random.randint() can be
 def createParams():
     return {
-        '--exp_name': 'test_PDM',
+        '--exp_name': 'True_PDM',
         '--model': helper.utilsFunc.PDM_MODEL,
         '--num-epochs': 100,
-        '--pdm_factor': 10,
+        '--pdm_factor': 20,
         '--lr': MAX_LR / 100,
         '--weight_decay': MAX_LR / 1000,
 
         '--stride': random.randint(STRIDE[0], STRIDE[1]),
-        '--n_channel': 20,
+        '--n_channel': 9,
         '--kernel_size': random.randint(KERNEL[0], KERNEL[1]),
         '--dilation': random.randint(DILATION[0], DILATION[1])
     }
