@@ -64,6 +64,8 @@ def argument_parser():
     parser.add_argument("--n_channel", type=int, default=32)
     parser.add_argument("--kernel_size", type=int, default=80)
     parser.add_argument("--dilation", type=int, default=1)
+    parser.add_argument("--maxpool", type=int, default=4)
+
 
 
     parser.add_argument("--pdm_factor", type=int, default=pdm_factor,
@@ -181,6 +183,7 @@ def main(args):
     storage['n_channel']=args.n_channel
     storage['kernel_size']=args.kernel_size
     storage['dilation']=args.dilation
+    storage['maxpool']=args.maxpool
 
 
 
@@ -246,7 +249,8 @@ def main(args):
 
         waveform_size = storage['transform'](storage['waveform']).shape
         storage['model']=PDM_model( n_output=len(test_set.labels if storage['predict'] else train_set.labels),
-            stride=storage['stride'],n_channel=storage['n_channel'],kernel_size=storage['kernel_size'],dilation=storage['dilation']).to(storage['device'])
+            stride=storage['stride'],n_channel=storage['n_channel'],kernel_size=storage['kernel_size'],
+            dilation=storage['dilation'],maxpool=storage['maxpool']).to(storage['device'])
         
         print('PDM model setup')
 

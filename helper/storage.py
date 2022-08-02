@@ -5,7 +5,7 @@ import torch.nn as nn
 
 class Storage:
     hprams=['lr','batch_size','num_epochs','weight_decay','step_size','gamma']
-    hparams_PDM=['pdm_factor','stride','n_channel','kernel_size','dilation']
+    hparams_PDM=['pdm_factor','stride','n_channel','kernel_size','dilation',',maxpool']
     hparams_spec=['n_fft','hop_length','win_length']
     hparams_MEL=hparams_spec.copy()
     hparams_MEL.append('n_mels')
@@ -51,7 +51,7 @@ class Storage:
                 index += 1
 
         #weird behavior of creating a new folder
-        self.data['writer_hpram'] = SummaryWriter(self.data['writer_path'])
+        self.data['writer_hpram'] = SummaryWriter('hpram')
         self.data['writer_hpram'].add_hparams(
             hparam_dict | hparam_layer,metric_dict,
             run_name=self.data['base_name']

@@ -11,24 +11,35 @@ MIN_LR =0.000001
 MAX_weight_decay=MAX_LR/10
 MIN_weight_decay=MIN_LR/10
 
-DILATION = (1,20)
-KERNEL=(50,2000)
-STRIDE=(4,20)
+pdm_factor=20
+fe=16000
+DILATION = 40
+KERNEL=80
+
+STRIDE=(1, int(2 *fe*20/1000) ) # 2ms
+n_channel=20
+
 
 #random.randint() can be
 def createParams():
+    stride=random.randint(STRIDE[0], STRIDE[1])
+
+    Lin=fe*pdm_factor
+    Lout= int( (Lin-DILATION*(KERNEL-1) -1)/stride +1)
+    maxpool= int( (Lout +1)/124)
     return {
         '--exp_name': 'True_PDM',
         '--model': helper.utilsFunc.PDM_MODEL,
         '--num-epochs': 100,
-        '--pdm_factor': 20,
+        '--pdm_factor': pdm_factor,
         '--lr': MAX_LR / 100,
         '--weight_decay': MAX_LR / 1000,
 
-        '--stride': random.randint(STRIDE[0], STRIDE[1]),
-        '--n_channel': 9,
-        '--kernel_size': random.randint(KERNEL[0], KERNEL[1]),
-        '--dilation': random.randint(DILATION[0], DILATION[1])
+        '--stride': stride,
+        '--n_channel': n_channel,
+        '--kernel_size': KERNEL,
+        '--dilation': DILATION,
+        '--maxpool':maxpool
     }
 
 PDM_search_dict= createParams()
@@ -47,9 +58,11 @@ def validate(depth=0):
     n_channel=PDM_search_dict['--n_channel']
     kernel_size=PDM_search_dict['--kernel_size']
     dilation=PDM_search_dict['--dilation']
+    maxpool=PDM_search_dict['--maxpool']
 
     a=try_param(PDM_factor=pdm_factor,stride=stride,
-                n_channel=n_channel,kernel_size=kernel_size,dilation=dilation)
+                n_channel=n_channel,kernel_size=kernel_size,
+                dilation=dilation,maxpool=maxpool)
     if a == False :
         #reset_dict
         PDM_search_dict = createParams()
@@ -62,6 +75,8 @@ def validate(depth=0):
         PDM_search_dict['--n_channel']=n_channel
         PDM_search_dict['--kernel_size']=kernel_size
         PDM_search_dict['--dilation']=dilation
+        PDM_search_dict['--maxpool']=maxpool
+
         return True
 
 def deploy(current_index):
@@ -83,8 +98,7 @@ if __name__ == '__main__':
         sys.argv = [sys.argv[0]]
         args = main.argument_parser()
 
-        if validate() :
-            args=args.parse_args( deploy(current_index) )
-            print('args: ',args)
-            main.main(args)
+        args=args.parse_args( deploy(current_index) )
+        print('args: ',args)
+        main.main(args)
 

@@ -5,27 +5,35 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class PDM_model(nn.Module):
-    def __init__(self, n_input=1, n_output=35, stride=16, n_channel=32,kernel_size=100,dilation=1):
+    def __init__(self, n_input=1, n_output=35, stride=16, n_channel=32,kernel_size=100,dilation=1,maxpool=4):
         super().__init__()
         self.conv1 = nn.Conv1d(n_input, n_channel, kernel_size=kernel_size, stride=stride,dilation=dilation)
+        self.temp = nn.Sequential(
+            nn.BatchNorm1d(n_channel),
+            nn.ReLU(),)
+        self.max_p=nn.MaxPool1d(maxpool)
+
 
         self.second_layer= nn.Sequential(
+            nn.Conv1d(n_channel, n_channel, kernel_size=3),
             nn.BatchNorm1d(n_channel),
             nn.ReLU(),
-            nn.MaxPool1d(int(stride/4)),
-            nn.Conv1d(n_channel, n_channel, kernel_size=int(kernel_size/2),stride=stride,dilation=dilation),
-            nn.BatchNorm1d(n_channel),
-            nn.ReLU(),
-            nn.MaxPool1d(int(stride/4)),
-            nn.Conv1d(n_channel, 2 * n_channel, kernel_size=int(kernel_size/4),stride=stride,dilation=dilation),
+            nn.MaxPool1d(4),
+            nn.Conv1d(n_channel, 2 * n_channel, kernel_size=3),
             nn.BatchNorm1d(2 * n_channel),
             nn.ReLU(),
-            nn.MaxPool1d(int(stride/4)),
+            nn.MaxPool1d(4),
+            nn.Conv1d(2 * n_channel, 2 * n_channel, kernel_size=3),
+            nn.BatchNorm1d(2 * n_channel),
+            nn.ReLU(),
+            nn.MaxPool1d(4)
         )
         self.fc1 = nn.Linear(2 * n_channel, n_output)
 
     def forward(self, x):
         x = self.conv1(x)
+        x = self.temp(x)
+        x = self.max_p(x)
         x = self.second_layer(x)
         x = F.avg_pool1d(x, x.shape[-1])
         x = x.permute(0, 2, 1)
@@ -36,7 +44,7 @@ class PDM_model(nn.Module):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
 MAX_DEPTH=10
-def try_param(PDM_factor=10,n_channel=10,stride=4,kernel_size=1600,dilation=1,depth=0):
+def try_param(PDM_factor=10,n_channel=10,stride=4,kernel_size=1600,dilation=1,maxpool=4,depth=0):
     if depth > MAX_DEPTH:
         print('stopping the search :\n','try_param max depth reach')
         return False
@@ -47,7 +55,7 @@ def try_param(PDM_factor=10,n_channel=10,stride=4,kernel_size=1600,dilation=1,de
     in_test = torch.zeros((1, 1, input_size)).to(device )
 
     try :
-        a = PDM_model(stride=stride, n_channel=n_channel, kernel_size=kernel_size, dilation=dilation).to( device)
+        a = PDM_model(stride=stride, n_channel=n_channel, kernel_size=kernel_size, dilation=dilation,maxpool=maxpool).to( device)
         output = a(in_test)
         print('test passed,', a.count_parameters(), 'parameters')
         return (stride, n_channel, kernel_size, dilation)
@@ -77,5 +85,13 @@ KERNEL_SIZE="Kernel size can't be greater than actual input size"
 MIN_KERNEL_SIZE=10
 
 if __name__=='__main__':
-    for stride in [i for i in range(1,50,10)]:
-        try_param(dilation=stride)
+    PDM_factor=20
+    stride = 1
+    n_channel = 4
+    kernel_size = 80
+    dilation = 40
+
+    a = PDM_model(kernel_size=kernel_size, stride=stride,dilation=dilation,n_channel=n_channel)
+    input = torch.zeros((1, 1, 16000*PDM_factor))
+    output = a(input)
+    print(a.count_parameters())
