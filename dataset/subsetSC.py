@@ -22,7 +22,6 @@ class SubsetSC(SPEECHCOMMANDS):
             excludes = set(excludes)
             self._walker = [w for w in self._walker if w not in excludes]
 
-
         self.getLabels()
 
     def label_to_index(self,word):

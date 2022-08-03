@@ -205,15 +205,13 @@ class PdmTransform(torch.nn.Module):
         return self
 
     def pdm(self,x):
-        if x.ndim ==1 :
-            n = len(x)
-        else:
-            n = len(x[-1])
+        n = x.shape[-1]
         y = torch.zeros_like(x).to(self.device)
         shape=[* x.shape]
         shape[-1]+=+1
         error = torch.zeros(shape).to(self.device)
         for i in range(n):
+            #idx -> [... ,i]
             idx = (np.s_[:],) * (x.ndim-1) + (i,)
             y[idx] = torch.where( x[idx] >= error[idx] ,
                                   torch.ones(shape[:-1]).to(self.device),
@@ -223,8 +221,8 @@ class PdmTransform(torch.nn.Module):
 
     def __call__(self, samples):
         upsampled_samples = self.PDM_transform(samples)
-        samples +=1
-        samples /=2
+        upsampled_samples +=1
+        upsampled_samples /=2
         # upsampled_samples = resample(samples, n_pdm_samples)
         pdm_samples, pdm_error = self.pdm(upsampled_samples)
         return pdm_samples
