@@ -5,7 +5,7 @@ import torch.nn as nn
 
 class Storage:
     hprams=['lr','batch_size','num_epochs','weight_decay','step_size','gamma']
-    hparams_PDM=['pdm_factor','stride','n_channel','kernel_size','dilation',',maxpool']
+    hparams_PDM=['pdm_factor','stride','n_channel','kernel_size','dilation','maxpool']
     hparams_spec=['n_fft','hop_length','win_length']
     hparams_MEL=hparams_spec.copy()
     hparams_MEL.append('n_mels')
