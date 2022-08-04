@@ -54,7 +54,7 @@ def setupPDM(pdm_factor=20,mode='training'):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     PDM_TRAMSFORM = PdmTransform(pdm_factor=pdm_factor, signal_len=fe,
                                  orig_freq=fe).to(device)
-    root ='../'
+    root ='./'
     if 'SLURM_TMPDIR' in os.environ:
         root = os.environ['SLURM_TMPDIR']
         print('Compute Canada detected, root set to', root)
@@ -91,6 +91,5 @@ if __name__=='__main__':
         print(a)
         print(b)
         print(len(PDMsubset))
-        PDMsubset.getLabels()
 
 

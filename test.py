@@ -1,5 +1,8 @@
+import pickle
 import sys
 import torch
+
+from dataset.subsetPDM import white_list_mode, setupPDM
 from dataset.subsetSC import SubsetSC
 from helper.utilsFunc import PdmTransform, timeThat
 
@@ -53,7 +56,16 @@ def test():
                 data = PDM_TRAMSFORM(data)
 
 if __name__=='__main__':
-    test()
+    if len(sys.argv) > 1:
+        print('job index', sys.argv[1])
+        index = int(sys.argv[1])
+        pdm_factor = 20
+        mode = white_list_mode[index]
+        setupPDM(pdm_factor=pdm_factor, mode=mode)
 
-    if len(sys.argv) >1 :
-        print('job index',sys.argv[1])
+        PDMsubset = pickle.load(open("PDM_dataset_" + mode + '_' + str(pdm_factor) + ".pt", "rb"))
+        a = PDMsubset[0]
+        b = PDMsubset[0:100]
+        print(a)
+        print(b)
+        print(len(PDMsubset))

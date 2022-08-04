@@ -18,4 +18,4 @@ tar -xf $archiveFile --directory $archiveDir
 source ~/venv/bin/activate
 
 #---------------
-python dataset/subsetPDM.py $SLURM_ARRAY_TASK_ID
+python test.py $SLURM_ARRAY_TASK_ID
