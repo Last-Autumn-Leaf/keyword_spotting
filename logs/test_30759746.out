@@ -1,8 +1,0 @@
-terminate called after throwing an instance of 'c10::Error'
-  what():  Input type (CPUFloatType) and weight type (CUDAFloatType) should be the same or input should be a MKLDNN tensor and weight is a dense tensor
-Exception raised from _convolution at /tmp/coulombc/pytorch_build_2021-11-10_08-09-16/avx2/python3.9/pytorch/aten/src/ATen/native/Convolution.cpp:922 (most recent call first):
-frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x55 (0x2b5318121905 in /home/yoogo/venv/lib/python3.9/site-packages/torch/lib/libc10.so)
-frame #1: c10::detail::torchCheckFail(char const*, char const*, unsigned int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) + 0xdb (0x2b5318103185 in /home/yoogo/venv/lib/python3.9/site-packages/torch/lib/libc10.so)
-frame #2: at::native::_convolution(at::Tensor const&, at::Tensor const&, c10::optional<at::Tensor> const&, c10::ArrayRef<long>, c10::ArrayRef<long>, c10::ArrayRef<long>, bool, c10::ArrayRef<long>, long, bool, bool, bool, bool) + 0x40e2 (0x2b52f2cf4fa2 in /home/yoogo/venv/lib/python3.9/site-packages/torch/lib/libtorch_cpu.so)
-
-/var/spool/slurmd/job30759746/slurm_script: line 21: 163401 Aborted                 (core dumped) python test.py $SLURM_ARRAY_TASK_ID

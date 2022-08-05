@@ -71,7 +71,7 @@ def setupPDM(pdm_factor=20,mode='training'):
     for i in range(n):
         temp=subset[i]
         label.append(temp[2])
-        waveform.append(temp[0])
+        waveform.append(temp[0].to(device))
 
     # padding :
     print('padding...')
