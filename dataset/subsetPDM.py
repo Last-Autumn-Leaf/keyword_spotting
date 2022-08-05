@@ -55,7 +55,7 @@ def setupPDM(pdm_factor=20,mode='training'):
         raise Exception('unrecognized mode: '+str(mode))
     fe = 16000
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    #device ="cpu"
+    device ="cpu"
     PDM_TRAMSFORM = PdmTransform(pdm_factor=pdm_factor, signal_len=fe,
                                  orig_freq=fe).to(device)
     root ='./'
