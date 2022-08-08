@@ -231,8 +231,8 @@ class PdmTransform(torch.nn.Module):
         return "custom PDM transform, does the rescale and the transform"
 
 currentOrLast = lambda c,lst: c if c <len(lst) else -1
-BytesToTensor = lambda byte :  torch.tensor(list(byte),dtype=int)
-tensorToBytes = lambda t :  t.clone().detach().bool().numpy().tobytes()
+BytesToTensor = lambda byte :  torch.tensor(np.unpackbits(np.frombuffer(byte,dtype=np.uint8)))
+tensorToBytes = lambda t :  np.packbits(t.cpu().bool().numpy()).tobytes()
 
 if __name__=='__main__':
     with timeThat() :

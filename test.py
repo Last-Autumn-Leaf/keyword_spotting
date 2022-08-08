@@ -1,34 +1,37 @@
-import pickle
+import os
+import pathlib
 import sys
-import torch
+import zipfile
 
 from dataset.subsetPDM import white_list_mode, setupPDMtoText, SubsetPDM
-from helper.utilsFunc import PdmTransform, timeThat
+from helper.utilsFunc import timeThat
 
-b_size=100
-PDM_factor=20
-fe=16000
-device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
-PDM_TRAMSFORM=PdmTransform(pdm_factor=PDM_factor,signal_len=fe,
-                                   orig_freq=fe).to(device)
-test_only=True
-
-if device== "cuda":
-    num_workers = 1
-    pin_memory = True
-else:
-    num_workers = 0
-    pin_memory = False
-
-sys.argv.append(1)
 if __name__=='__main__':
     if len(sys.argv) > 1:
         print('job index', sys.argv[1])
         index = int(sys.argv[1])
         pdm_factor = 20
         mode = white_list_mode[index]
-        setupPDMtoText(pdm_factor=pdm_factor,mode=mode)
+        root='./'
+        if 'SLURM_TMPDIR' in os.environ:
+            root = pathlib.Path(os.environ['SLURM_TMPDIR'])
+            print('Compute Canada detected, root set to', root)
 
-        print('testing')
-        a = SubsetPDM(mode=mode)
+        with timeThat(mode +' PDM DATASET'):
+            file_tensor,file_labels=setupPDMtoText(pdm_factor=pdm_factor,mode=mode)
+
+        print('testing ...')
+        a = SubsetPDM(mode=mode,root=root).to()
         print(a[1])
+        print(len(a))
+
+        # We do this only if we are on compute Canada
+        if 'SLURM_TMPDIR' in os.environ:
+            #zipping and sending it to the right folder
+            with zipfile.ZipFile(pathlib.Path.cwd() / 'PDM_{}_{}.zip'.format(pdm_factor,mode), 'w',
+                                 compression=zipfile.ZIP_DEFLATED,
+                                 compresslevel=9) as zf:
+                zf.write(file_tensor)
+                zf.write(file_labels)
+
+
