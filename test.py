@@ -18,7 +18,7 @@ if __name__=='__main__':
             print('Compute Canada detected, root set to', root)
 
         with timeThat(mode +' PDM DATASET'):
-            file_tensor,file_labels=setupPDMtoText(pdm_factor=pdm_factor,mode=mode)
+            file_tensor,file_labels=setupPDMtoText(pdm_factor=pdm_factor,mode=mode,root=root)
 
         print('testing ...')
         a = SubsetPDM(mode=mode,root=root).to()

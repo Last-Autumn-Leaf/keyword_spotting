@@ -115,9 +115,7 @@ def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./')):
         file_tensor.write(waveform)
         file_labels.write(label)
 
-        # print smth every 5%
-        if i % int(n / 20) == 0:
-            print('itération ',i,'/'+str(n))
+        print('itération ',i,'/'+str(n),end='\r')
 
 
     file_tensor.close()
