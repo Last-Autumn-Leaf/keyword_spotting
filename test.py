@@ -3,7 +3,6 @@ import sys
 import torch
 
 from dataset.subsetPDM import white_list_mode, setupPDM
-from dataset.subsetSC import SubsetSC
 from helper.utilsFunc import PdmTransform, timeThat
 
 b_size=100
