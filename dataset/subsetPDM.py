@@ -85,8 +85,8 @@ def setupPDMtoText(pdm_factor=20,mode='training'):
     #device ="cpu"
     PDM_TRAMSFORM = PdmTransform(pdm_factor=pdm_factor, signal_len=fe,
                                  orig_freq=fe).to(device)
-    #TODO : change n and ../
-    root ='../'
+
+    root ='./'
     if 'SLURM_TMPDIR' in os.environ:
         root = os.environ['SLURM_TMPDIR']
         print('Compute Canada detected, root set to', root)
