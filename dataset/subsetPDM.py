@@ -79,12 +79,12 @@ class SubsetPDM(Dataset):
         return BytesToTensor(byte).to(self.device),label
 
 
-def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./')):
+def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./'),device = torch.device("cuda" if torch.cuda.is_available() else "cpu")):
     if mode not in white_list_mode:
         raise Exception('unrecognized mode: '+str(mode))
     fe = 16000
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    #device ="cpu"
+
+
     PDM_TRAMSFORM = PdmTransform(pdm_factor=pdm_factor, signal_len=fe,
                                  orig_freq=fe).to(device)
 
@@ -103,7 +103,7 @@ def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./')):
     file_tensor = open(tensor_path, "ab")
     file_labels = open(label_path, "a")
     print('Saving dataset at :\n',file_tensor,'\n',file_labels)
-    for i in range(n):
+    for i in range(3):
         temp = subset[i]
         label = temp[2] +'\n'
         temp = subset.pad_sequence(temp[0].to(device))
@@ -121,7 +121,7 @@ def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./')):
     file_tensor.close()
     file_labels.close()
 
-    return file_tensor,file_labels
+    return tensor_path,label_path
 
 sys.argv.append(1)
 if __name__=='__main__':
