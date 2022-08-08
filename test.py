@@ -5,8 +5,9 @@ import zipfile
 
 from dataset.subsetPDM import white_list_mode, setupPDMtoText, SubsetPDM
 from helper.utilsFunc import timeThat
+import torch
 
-device ="cpu"
+device =torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if __name__=='__main__':
     if len(sys.argv) > 1:
         print('job index', sys.argv[1])
