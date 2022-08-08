@@ -2,7 +2,7 @@ import pickle
 import sys
 import torch
 
-from dataset.subsetPDM import white_list_mode, setupPDM
+from dataset.subsetPDM import white_list_mode, setupPDMtoText, SubsetPDM
 from helper.utilsFunc import PdmTransform, timeThat
 
 b_size=100
@@ -27,11 +27,8 @@ if __name__=='__main__':
         index = int(sys.argv[1])
         pdm_factor = 20
         mode = white_list_mode[index]
-        setupPDM(pdm_factor=pdm_factor, mode=mode)
+        # setupPDMtoText(pdm_factor=pdm_factor,mode=mode)
 
-        PDMsubset = pickle.load(open("PDM_dataset_" + mode + '_' + str(pdm_factor) + ".pt", "rb"))
-        a = PDMsubset[0]
-        b = PDMsubset[0:9]
-        print(a)
-        print(b)
-        print(len(PDMsubset))
+        print('testing')
+        a = SubsetPDM(mode=mode)
+        print(a[1])
