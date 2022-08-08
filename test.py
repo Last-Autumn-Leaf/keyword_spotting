@@ -27,7 +27,7 @@ if __name__=='__main__':
         index = int(sys.argv[1])
         pdm_factor = 20
         mode = white_list_mode[index]
-        # setupPDMtoText(pdm_factor=pdm_factor,mode=mode)
+        setupPDMtoText(pdm_factor=pdm_factor,mode=mode)
 
         print('testing')
         a = SubsetPDM(mode=mode)

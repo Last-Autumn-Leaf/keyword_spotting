@@ -53,15 +53,18 @@ class SubsetPDM(Dataset):
 
         return tensors, targets
 
+    def to (self,device):
+        self.device=device
+        return self
     def __len__(self): return len(self.target)
     def __getitem__(self, i):
 
         #TODO : it is possible to keep the file open in the initializer
-        with open("PDM_{}_{}_tensor.bin".format(str(self.pdm_factor),mode), "rb") as f:
+        with open("PDM_{}_{}_tensor.bin".format(str(self.pdm_factor),self.mode), "rb") as f:
             f.seek(i * self.size)
             byte = f.read(self.size)
 
-        with open("PDM_{}_{}_label.txt".format(str(pdm_factor), mode), "r")  as f:
+        with open("PDM_{}_{}_label.txt".format(str(pdm_factor), self.mode), "r")  as f:
             for j, line in enumerate(f):
                 if j == i:
                     label=line.replace('\n','')
@@ -71,7 +74,7 @@ class SubsetPDM(Dataset):
         #keep the whole file in memory so not good, better use an itterator
         #label =linecache.getline("PDM_{}_{}_label.txt".format(str(pdm_factor), mode), i)
         #TODO : cast label to int via label_to_index
-        return BytesToTensor(byte),label
+        return BytesToTensor(byte).to(self.device),label
 
 
 def setupPDMtoText(pdm_factor=20,mode='training'):
@@ -98,7 +101,7 @@ def setupPDMtoText(pdm_factor=20,mode='training'):
     for i in range(n):
         temp = subset[i]
         label = temp[2] +'\n'
-        temp = subset.pad_sequence(temp[0])
+        temp = subset.pad_sequence(temp[0].to(device))
         # Resample et PDM transform
         temp = PDM_TRAMSFORM(temp)
 
@@ -121,7 +124,8 @@ if __name__=='__main__':
         #setupPDMtoText(pdm_factor=pdm_factor,mode=mode)
 
         print('testing')
-        a = SubsetPDM()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        a = SubsetPDM().to(device)
         print(a[1])
 
 
