@@ -3,16 +3,23 @@ import sys
 import torch
 import os
 import pickle
-
+import numpy as np
 from torch.utils.data import Dataset
 
 from dataset.subsetSC import SubsetSC
 from helper.utilsFunc import PdmTransform
+from helper.utilsFunc import tensorToBytes, BytesToTensor
+import linecache
 
-
+white_list_mode=['training','testing','validation']
 class SubsetPDM(Dataset):
-    def __init__(self):
-        ...
+    def __init__(self,pdm_factor:int=20,fe:int=16000,mode:str=white_list_mode[0]):
+        self.pdm_factor=pdm_factor
+        self.size=pdm_factor * 16000
+        if mode in white_list_mode :
+            self.mode=mode
+        else :
+            raise Exception('unrecognized mode'+str(mode))
 
     def setData(self,data):
         self.data=data
@@ -47,18 +54,36 @@ class SubsetPDM(Dataset):
         return tensors, targets
 
     def __len__(self): return len(self.target)
-    def __getitem__(self, i): return (self.data[i],self.target[i])
+    def __getitem__(self, i):
 
-white_list_mode=['training','testing','validation']
-def setupPDM(pdm_factor=20,mode='training'):
+        #TODO : it is possible to keep the file open in the initializer
+        with open("PDM_{}_{}_tensor.bin".format(str(self.pdm_factor),mode), "rb") as f:
+            f.seek(i * self.size)
+            byte = f.read(self.size)
+
+        with open("PDM_{}_{}_label.txt".format(str(pdm_factor), mode), "r")  as f:
+            for j, line in enumerate(f):
+                if j == i:
+                    label=line.replace('\n','')
+                    break
+
+
+        #keep the whole file in memory so not good, better use an itterator
+        #label =linecache.getline("PDM_{}_{}_label.txt".format(str(pdm_factor), mode), i)
+        #TODO : cast label to int via label_to_index
+        return BytesToTensor(byte),label
+
+
+def setupPDMtoText(pdm_factor=20,mode='training'):
     if mode not in white_list_mode:
         raise Exception('unrecognized mode: '+str(mode))
     fe = 16000
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device ="cpu"
+    #device ="cpu"
     PDM_TRAMSFORM = PdmTransform(pdm_factor=pdm_factor, signal_len=fe,
                                  orig_freq=fe).to(device)
-    root ='./'
+    #TODO : change n and ../
+    root ='../'
     if 'SLURM_TMPDIR' in os.environ:
         root = os.environ['SLURM_TMPDIR']
         print('Compute Canada detected, root set to', root)
@@ -66,42 +91,37 @@ def setupPDM(pdm_factor=20,mode='training'):
     subset = SubsetSC(mode, root)
     print(mode,'subset size :',len(subset))
     n=len(subset)
-    PDMsubset = SubsetPDM()
-    label,waveform=[],[]
+
+    label,waveform='',b''
+    file_tensor = open("PDM_{}_{}_tensor.bin".format(str(pdm_factor),mode), "ab")
+    file_labels = open("PDM_{}_{}_label.txt".format(str(pdm_factor), mode), "a")
     for i in range(n):
-        temp=subset[i]
-        label.append(temp[2])
-        waveform.append(temp[0].to(device))
+        temp = subset[i]
+        label = temp[2] +'\n'
+        temp = subset.pad_sequence(temp[0])
+        # Resample et PDM transform
+        temp = PDM_TRAMSFORM(temp)
 
-    # padding :
-    print('padding...')
-    waveform = subset.pad_sequence(waveform)
-    # Resample et PDM transform
-    print('PDM-transforming...')
-    waveform = PDM_TRAMSFORM(waveform)
+        waveform+=tensorToBytes(temp)
 
-    #saving
-    print('dumping')
-    PDMsubset.setData(waveform)
-    PDMsubset.setTarget(label)
-    PDMsubset.getLabels()
-    pickle.dump(PDMsubset, open("PDM_dataset_"+mode+'_'+str(pdm_factor)+".pt", "wb"))
+        file_tensor.write(waveform)
+        file_labels.write(label)
 
 
+    file_tensor.close()
+    file_labels.close()
+
+sys.argv.append(1)
 if __name__=='__main__':
     if len(sys.argv) >1 :
         print('job index',sys.argv[1])
         index=int(sys.argv[1])
         pdm_factor=20
         mode=white_list_mode[index]
-        setupPDM(pdm_factor=pdm_factor,mode=mode)
+        #setupPDMtoText(pdm_factor=pdm_factor,mode=mode)
 
         print('testing')
-        PDMsubset = pickle.load(open("PDM_dataset_"+mode+'_'+str(pdm_factor)+".pt", "rb"))
-        a=PDMsubset[0]
-        b=PDMsubset[0:9]
-        print(a)
-        print(b)
-        print(len(PDMsubset))
+        a = SubsetPDM()
+        print(a[1])
 
 
