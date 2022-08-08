@@ -102,6 +102,7 @@ def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./')):
 
     file_tensor = open(tensor_path, "ab")
     file_labels = open(label_path, "a")
+    print('Saving dataset at :\n',file_tensor,'\n',file_labels)
     for i in range(n):
         temp = subset[i]
         label = temp[2] +'\n'
@@ -114,7 +115,8 @@ def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./')):
         file_tensor.write(waveform)
         file_labels.write(label)
 
-        if i % int(n / 4) == 0:
+        # print smth every 5%
+        if i % int(n / 20) == 0:
             print('itération ',i,'/'+str(n))
 
 
