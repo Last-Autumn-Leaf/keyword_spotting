@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --time=12:00:00
 #SBATCH --account=def-seanwood
-#SBATCH --array=0-2
+#SBATCH --array=1-2
 #SBATCH --output=./logs/test_%j.out
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=6
