@@ -205,26 +205,29 @@ class PdmTransform(torch.nn.Module):
         return self
 
     def pdm(self,x):
-        n = x.shape[-1]
+        if x.ndim == 3:
+            # x.shape = (batch_size, input_size==1, sequence_length)
+            x = x.squeeze(dim=1)
+        batch_size, sequence_length = x.shape
+
         y = torch.zeros_like(x).to(self.device)
-        shape=[* x.shape]
-        shape[-1]+=+1
-        error = torch.zeros(shape).to(self.device)
-        for i in range(n):
-            #idx -> [... ,i]
-            idx = (np.s_[:],) * (x.ndim-1) + (i,)
-            y[idx] = torch.where( x[idx] >= error[idx] ,
-                                  torch.ones(shape[:-1]).to(self.device),
-                                  torch.zeros(shape[:-1]).to(self.device))
-            error[(np.s_[:],) * (x.ndim-1) + (i+1,)] = y[idx] - x[idx] + error[idx]
-        return y, error[:n]
+        errors = torch.zeros(batch_size, requires_grad=False).to(self.device)
+        for i in range(sequence_length):
+            y[:,i] = x[:,i] >= errors
+            errors += y[:,i] - x[:,i]
+        
+        if x.ndim == 3:
+            y = y[:, None, :]
+        
+        return y
 
     def __call__(self, samples):
+        samples = (samples+1)/2
         upsampled_samples = self.PDM_transform(samples)
-        upsampled_samples +=1
-        upsampled_samples /=2
-        # upsampled_samples = resample(samples, n_pdm_samples)
-        pdm_samples, pdm_error = self.pdm(upsampled_samples)
+        upsampled_samples[upsampled_samples<0] = 0
+        upsampled_samples[upsampled_samples>1] = 1
+
+        pdm_samples = self.pdm(upsampled_samples)
         return pdm_samples
 
     def __repr__(self):

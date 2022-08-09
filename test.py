@@ -19,6 +19,7 @@ if __name__=='__main__':
             root = pathlib.Path(os.environ['SLURM_TMPDIR'])
             print('Compute Canada detected, root set to', root)
 
+        root = pathlib.Path('/home/sean/data')
         with timeThat(mode +' PDM DATASET'):
             file_tensor,file_labels=setupPDMtoText(pdm_factor=pdm_factor,mode=mode,root=root,device=device)
 

@@ -1,5 +1,7 @@
 import sys
 
+import time
+
 import torch
 import os
 from torch.utils.data import Dataset
@@ -103,19 +105,38 @@ def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./'),device
     file_tensor = open(tensor_path, "ab")
     file_labels = open(label_path, "a")
     print('Saving dataset at :\n',file_tensor,'\n',file_labels)
-    for i in range(n):
+
+    def pad_sequence(x, n_samples=16000):
+        n_pad = n_samples - x.shape[-1]
+        if n_pad != 0:
+            x = torch.nn.functional.pad(x, (0, n_pad), value=0.0)
+        return x
+
+    for batch_size in [1, 10, 100, 1000, 5000]:
+        samples = torch.stack([pad_sequence(subset[i][0]) for i in range(batch_size)])
+
+        start = time.time()
+        samples = PDM_TRAMSFORM(samples.to(device))
+        elapsed = time.time() - start
+        print(f'Processed {batch_size} files in {elapsed:.2f} s : {float(elapsed)/batch_size:.5f} s/file')
+
+    '''for i in range(n):
         temp = subset[i]
         label = temp[2] +'\n'
         temp = subset.pad_sequence(temp[0].to(device))
         # Resample et PDM transform
+
+        #start = time.time()
         temp = PDM_TRAMSFORM(temp)
+        #elapsed_time = time.time() - start
+        #print(f'took: {elapsed_time:.2f}'
 
         waveform+=tensorToBytes(temp)
 
         file_tensor.write(waveform)
         file_labels.write(label)
 
-        print('itération ',i,'/'+str(n),end='\r')
+        print('itération ',i,'/'+str(n),end='\r')'''
 
 
     file_tensor.close()
