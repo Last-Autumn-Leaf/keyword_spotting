@@ -19,14 +19,15 @@ if __name__=='__main__':
             root = pathlib.Path(os.environ['SLURM_TMPDIR'])
             print('Compute Canada detected, root set to', root)
 
-        root = pathlib.Path('/home/sean/data')
+
         with timeThat(mode +' PDM DATASET'):
             file_tensor,file_labels=setupPDMtoText(pdm_factor=pdm_factor,mode=mode,root=root,device=device)
 
         print('testing ...')
         a = SubsetPDM(mode=mode,root=root).to(device)
         print(a[1])
-        print(len(a))
+        print(a[1][0].shape)
+        print(mode,'subset size :',len(a))
 
         # We do this only if we are on compute Canada
         if 'SLURM_TMPDIR' in os.environ:

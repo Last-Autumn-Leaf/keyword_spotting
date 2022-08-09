@@ -1,7 +1,7 @@
 import sys
 
 import time
-
+import numpy as np
 import torch
 import os
 from torch.utils.data import Dataset
@@ -28,6 +28,7 @@ class SubsetPDM(Dataset):
 
         self.getLabels()
         f = open(self.label_path, "r")
+        j=0
         for j, line in enumerate(f):
             ...
         f.close()
@@ -64,10 +65,11 @@ class SubsetPDM(Dataset):
     def __getitem__(self, i):
 
         #TODO : it is possible to keep the file open in the initializer
+        byte=b''
         with open(self.tensor_path, "rb") as f:
             f.seek(i * self.size)
             byte = f.read(self.size)
-
+        label=''
         with open(self.label_path, "r")  as f:
             for j, line in enumerate(f):
                 if j == i:
@@ -81,7 +83,9 @@ class SubsetPDM(Dataset):
         return BytesToTensor(byte).to(self.device),label
 
 
-def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./'),device = torch.device("cuda" if torch.cuda.is_available() else "cpu")):
+def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./'),
+                   device = torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+                   bsize=5000):
     if mode not in white_list_mode:
         raise Exception('unrecognized mode: '+str(mode))
     fe = 16000
@@ -93,8 +97,6 @@ def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./'),device
     subset = SubsetSC(mode, root)
     print(mode,'subset size :',len(subset))
     n=len(subset)
-
-    label,waveform='',b''
 
     # unlink allow us to delete the file if it already exists
     tensor_path= root/"PDM_{}_{}_tensor.bin".format(str(pdm_factor),mode)
@@ -112,31 +114,27 @@ def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./'),device
             x = torch.nn.functional.pad(x, (0, n_pad), value=0.0)
         return x
 
-    for batch_size in [1, 10, 100, 1000, 5000]:
-        samples = torch.stack([pad_sequence(subset[i][0]) for i in range(batch_size)])
+    i=0
+    while i<n:
+        end = i+bsize if i+bsize<n else n
+        samples=[]
+        labels =''
 
-        start = time.time()
-        samples = PDM_TRAMSFORM(samples.to(device))
-        elapsed = time.time() - start
-        print(f'Processed {batch_size} files in {elapsed:.2f} s : {float(elapsed)/batch_size:.5f} s/file')
+        for ii in range(i, end) :
+            samples.append(pad_sequence(subset[ii][0]))
+            labels+=subset[ii][2]+'\n'
+        i=end
 
-    '''for i in range(n):
-        temp = subset[i]
-        label = temp[2] +'\n'
-        temp = subset.pad_sequence(temp[0].to(device))
+        samples = torch.stack(samples)
+        samples = pad_sequence(samples.to(device))
         # Resample et PDM transform
-
-        #start = time.time()
-        temp = PDM_TRAMSFORM(temp)
-        #elapsed_time = time.time() - start
-        #print(f'took: {elapsed_time:.2f}'
-
-        waveform+=tensorToBytes(temp)
+        samples = PDM_TRAMSFORM(samples)
+        waveform=tensorToBytes(samples)
 
         file_tensor.write(waveform)
-        file_labels.write(label)
+        file_labels.write(labels)
 
-        print('itération ',i,'/'+str(n),end='\r')'''
+        print('itération ',i,'/'+str(n),end='\r')
 
 
     file_tensor.close()
@@ -144,19 +142,19 @@ def setupPDMtoText(pdm_factor=20,mode='training',root= pathlib.Path('./'),device
 
     return tensor_path,label_path
 
-sys.argv.append(1)
+
 if __name__=='__main__':
     if len(sys.argv) >1 :
         print('job index',sys.argv[1])
         index=int(sys.argv[1])
         pdm_factor=20
         mode=white_list_mode[index]
-        root='../'
+        root=pathlib.Path('../')
         if 'SLURM_TMPDIR' in os.environ:
             root = pathlib.Path(os.environ['SLURM_TMPDIR'])
             print('Compute Canada detected, root set to', root)
 
-        #setupPDMtoText(pdm_factor=pdm_factor,mode=mode,root=root)
+        setupPDMtoText(pdm_factor=pdm_factor,mode=mode,root=root,bsize=5000)
 
         print('testing')
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

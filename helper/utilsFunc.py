@@ -198,7 +198,7 @@ class PdmTransform(torch.nn.Module):
     def __init__(self, orig_freq: int = 16000,pdm_factor: int = 48,signal_len:int=16000):
         super(PdmTransform, self).__init__()
         self.PDM_transform=torchaudio.transforms.Resample(orig_freq=orig_freq, new_freq=int(np.round(signal_len * pdm_factor)))
-
+        self.device=torch.device('cpu')
     def to(self,device):
         self.device=device
         self.PDM_transform=self.PDM_transform.to(device)
@@ -215,9 +215,7 @@ class PdmTransform(torch.nn.Module):
         for i in range(sequence_length):
             y[:,i] = x[:,i] >= errors
             errors += y[:,i] - x[:,i]
-        
-        if x.ndim == 3:
-            y = y[:, None, :]
+
         
         return y
 
