@@ -1,6 +1,7 @@
 import torch.optim as optim
 from tqdm import tqdm
 import metrics.metrics as metrics
+from dataset.subsetPDM import SubsetPDM
 from dataset.subsetSC import SubsetSC
 #import models
 from helper.storage import Storage
@@ -125,7 +126,7 @@ def main(args):
     if 'SLURM_TMPDIR' in os.environ :
         root=os.environ['SLURM_TMPDIR']
         print('Compute Canada detected, root set to',root)
-
+    selectedDataset=SubsetSC if args.model is not PDM_MODEL else SubsetPDM
 
     if storage['device'] == "cuda":
         num_workers = 1
@@ -137,7 +138,7 @@ def main(args):
     if not storage['predict']: # TRAINING AND OR VALIDATION MODE
         print('Training mode')
         with timeThat('training/validation sets'):
-            train_set = SubsetSC("training", root)
+            train_set = selectedDataset(subset="training",root= root)
             storage['train_loader'] = torch.utils.data.DataLoader(
                 train_set,
                 batch_size=storage['batch_size'],
@@ -147,7 +148,7 @@ def main(args):
                 pin_memory=pin_memory,)
             print('training loader set up, size',len(train_set))
             if not storage['no_validation'] :
-                val_set = SubsetSC("validation", root)
+                val_set = selectedDataset(subset="validation",root= root)
                 storage['val_loader'] = torch.utils.data.DataLoader(
                     val_set,
                     batch_size=storage['batch_size'],
@@ -156,11 +157,16 @@ def main(args):
                     num_workers=num_workers,
                     pin_memory=pin_memory, )
                 print('validation loader set up, size',len(val_set))
-            storage['waveform'], storage['sample_rate'], label, speaker_id, utterance_number = train_set[0]
+            temp = train_set.to(storage['device'])[0]
+            if (len(temp))==2:
+                storage['waveform'] =temp[0]
+                storage['sample_rate']=train_set.fe
+            else:
+                storage['waveform'], storage['sample_rate'], label, speaker_id, utterance_number = temp
     else : # PREDICTION MODE
         print('Prediction mode')
         with timeThat('test sets'):
-            test_set = SubsetSC("testing", root)
+            test_set = selectedDataset(subset="testing",root= root)
             storage['test_loader'] = torch.utils.data.DataLoader(
                 test_set,
                 batch_size=storage['batch_size'],
@@ -169,7 +175,12 @@ def main(args):
                 num_workers=num_workers,
                 pin_memory=pin_memory, )
             print('test loader set up, size', len(test_set))
-            storage['waveform'], storage['sample_rate'], label, speaker_id, utterance_number = test_set[0]
+            temp = test_set.to(storage['device'])[0]
+            if (len(temp))==2:
+                storage['waveform'] =temp[0]
+                storage['sample_rate']=test_set.fe
+            else:
+                storage['waveform'], storage['sample_rate'], label, speaker_id, utterance_number = temp
 
     storage['waveform']=storage['waveform'].to(storage['device'])
 
@@ -244,8 +255,8 @@ def main(args):
         
         print('MFCC model setup')
     elif storage['model_name'] == PDM_MODEL :
-        storage['transform']=PdmTransform(pdm_factor=storage['pdm_factor'],signal_len=len(storage['waveform'][0]),
-                                   orig_freq=storage['sample_rate']).to(storage['device'])
+        null_transform = lambda x : x
+        storage['transform']=null_transform
 
         waveform_size = storage['transform'](storage['waveform']).shape
         storage['model']=PDM_model( n_output=len(test_set.labels if storage['predict'] else train_set.labels),

@@ -24,7 +24,7 @@ if __name__=='__main__':
             file_tensor,file_labels=setupPDMtoText(pdm_factor=pdm_factor,mode=mode,root=root,device=device)
 
         print('testing ...')
-        a = SubsetPDM(mode=mode,root=root).to(device)
+        a = SubsetPDM(subset=mode, root=root).to(device)
         print(a[1])
         print(a[1][0].shape)
         print(mode,'subset size :',len(a))

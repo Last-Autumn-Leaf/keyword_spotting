@@ -121,11 +121,11 @@ def train(storage,validation=False):
     correct = 0
     mode='val' if validation else 'train'
     for batch_idx, (data, target) in enumerate(storage[mode+'_loader']):
+
         data = data.to(storage['device'])
         target = target.to(storage['device'])
         # apply transform and model on whole batch directly on device
         data = storage['transform'](data)
-        #data = data.to(storage['device'])
         output = storage['model'](data)
         correct += storage['metrics'](output, target)
 
@@ -232,7 +232,7 @@ class PdmTransform(torch.nn.Module):
         return "custom PDM transform, does the rescale and the transform"
 
 currentOrLast = lambda c,lst: c if c <len(lst) else -1
-BytesToTensor = lambda byte :  torch.tensor(np.unpackbits(np.frombuffer(byte,dtype=np.uint8)))
+BytesToTensor = lambda byte :  torch.tensor(np.unpackbits(np.frombuffer(byte,dtype=np.uint8)))[None,:].float()
 tensorToBytes = lambda t :  np.packbits(t.cpu().bool().numpy()).tobytes()
 
 if __name__=='__main__':

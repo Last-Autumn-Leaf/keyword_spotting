@@ -1,6 +1,8 @@
 import sys
 
 import time
+import zipfile
+
 import numpy as np
 import torch
 import os
@@ -14,17 +16,25 @@ import pathlib
 
 white_list_mode=['training','testing','validation']
 class SubsetPDM(Dataset):
-    def __init__(self,pdm_factor:int=20,fe:int=16000,mode:str=white_list_mode[0],
+    def __init__(self,pdm_factor:int=20,fe:int=16000,subset:str=white_list_mode[0],
                  root=pathlib.Path('./')):
         self.pdm_factor=pdm_factor
+        self.fe=fe
         self.size=int(pdm_factor * fe /8)
-        if mode in white_list_mode :
-            self.mode=mode
+        if subset in white_list_mode :
+            self.mode=subset
         else :
-            raise Exception('unrecognized mode'+str(mode))
+            raise Exception('unrecognized mode' + str(subset))
         self.path=pathlib.Path(root)
         self.tensor_path=self.path / "PDM_{}_{}_tensor.bin".format(str(self.pdm_factor),self.mode)
         self.label_path= self.path / "PDM_{}_{}_label.txt".format(str(self.pdm_factor),self.mode)
+
+        if not self.tensor_path.is_file() or not self.label_path.is_file() :
+            zip_path=pathlib.Path.cwd() / 'PDM_{}_{}.zip'.format(pdm_factor,subset)
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(self.path)
+            if self.tensor_path.is_file() and self.label_path.is_file():
+                raise Exception('dataset files not found')
 
         self.getLabels()
         f = open(self.label_path, "r")
@@ -55,6 +65,8 @@ class SubsetPDM(Dataset):
         for waveform,label in batch:
             tensors += [waveform]
             targets += [self.label_to_index(label)]
+
+        tensors = torch.stack(tensors)
         targets = torch.stack(targets)
         return tensors, targets
 
@@ -76,10 +88,6 @@ class SubsetPDM(Dataset):
                     label=line.replace('\n','')
                     break
 
-
-        #keep the whole file in memory so not good, better use an itterator
-        #label =linecache.getline("PDM_{}_{}_label.txt".format(str(pdm_factor), mode), i)
-        #TODO : cast label to int via label_to_index
         return BytesToTensor(byte).to(self.device),label
 
 
@@ -158,7 +166,7 @@ if __name__=='__main__':
 
         print('testing')
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        a = SubsetPDM(mode=mode,root=root).to(device)
+        a = SubsetPDM(subset=mode, root=root).to(device)
         print(a[1])
 
 
