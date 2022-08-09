@@ -30,6 +30,7 @@ class SubsetPDM(Dataset):
         self.label_path= self.path / "PDM_{}_{}_label.txt".format(str(self.pdm_factor),self.mode)
 
         if not self.tensor_path.is_file() or not self.label_path.is_file() :
+            print('files not found, trying to unzip them from',self.path)
             zip_path=pathlib.Path.cwd() / 'PDM_{}_{}.zip'.format(pdm_factor,subset)
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 zip_ref.extractall(self.path)
@@ -162,7 +163,7 @@ if __name__=='__main__':
             root = pathlib.Path(os.environ['SLURM_TMPDIR'])
             print('Compute Canada detected, root set to', root)
 
-        setupPDMtoText(pdm_factor=pdm_factor,mode=mode,root=root,bsize=5000)
+        #setupPDMtoText(pdm_factor=pdm_factor,mode=mode,root=root,bsize=5000)
 
         print('testing')
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
