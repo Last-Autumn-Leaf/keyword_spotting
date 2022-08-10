@@ -37,10 +37,10 @@ class SubsetPDM(Dataset):
             print('searching for unzipped files...')
             for dirpath, dirnames, filenames in os.walk(self.path):
                 for filename in [f for f in filenames if f.endswith((".bin",".txt"))]:
-                    if filename in str(self.tensor_path) :
-                        self.tensor_path= pathlib.Path(dirpath,dirnames, filename)
-                    if filename in str(self.label_path) :
-                        self.label_path= pathlib.Path(dirpath,dirnames, filename)
+                    if filename in "PDM_{}_{}_tensor.bin".format(str(self.pdm_factor),self.mode) :
+                        self.tensor_path= pathlib.Path(self.path,dirpath, filename)
+                    if filename in "PDM_{}_{}_label.txt".format(str(self.pdm_factor),self.mode) :
+                        self.label_path= pathlib.Path(self.path,dirpath, filename)
             print('new tensor path',self.tensor_path)
             print('new labels path',self.label_path)
 
