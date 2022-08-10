@@ -30,7 +30,7 @@ class SubsetPDM(Dataset):
         self.label_path= self.path / "PDM_{}_{}_label.txt".format(str(self.pdm_factor),self.mode)
 
         if not self.tensor_path.is_file() or not self.label_path.is_file() :
-            print('files not found, trying to unzip them from',self.path)
+            print('files not found, trying to unzip them from',pathlib.Path.cwd())
             zip_path=pathlib.Path.cwd() / 'PDM_{}_{}.zip'.format(pdm_factor,subset)
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 zip_ref.extractall(self.path)
