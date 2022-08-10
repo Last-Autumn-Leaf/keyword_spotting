@@ -34,8 +34,17 @@ class SubsetPDM(Dataset):
             zip_path=pathlib.Path.cwd() / 'PDM_{}_{}.zip'.format(pdm_factor,subset)
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 zip_ref.extractall(self.path)
-            if self.tensor_path.is_file() and self.label_path.is_file():
-                raise Exception('dataset files not found')
+            print('searching for unzipped files...')
+            for dirpath, dirnames, filenames in os.walk(self.path):
+                for filename in [f for f in filenames if f.endswith((".bin",".txt"))]:
+                    if filename in self.tensor_path :
+                        self.tensor_path= pathlib.Path(filename)
+                    if filename in self.label_path :
+                        self.label_path= pathlib.Path(filename)
+            print('new tensor path',self.tensor_path)
+            print('new labels path',self.label_path)
+
+
 
         self.getLabels()
         f = open(self.label_path, "r")
