@@ -148,7 +148,7 @@ def main(args):
                 pin_memory=pin_memory,)
             print('training loader set up, size',len(train_set))
             if not storage['no_validation'] :
-                val_set = selectedDataset(subset="validation",root= root)
+                val_set = selectedDataset(subset="validation",root= root).to(storage['device'])
                 storage['val_loader'] = torch.utils.data.DataLoader(
                     val_set,
                     batch_size=storage['batch_size'],
@@ -166,7 +166,7 @@ def main(args):
     else : # PREDICTION MODE
         print('Prediction mode')
         with timeThat('test sets'):
-            test_set = selectedDataset(subset="testing",root= root)
+            test_set = selectedDataset(subset="testing",root= root).to(storage['device'])
             storage['test_loader'] = torch.utils.data.DataLoader(
                 test_set,
                 batch_size=storage['batch_size'],
