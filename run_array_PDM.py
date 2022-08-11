@@ -17,7 +17,7 @@ DILATION = 40
 KERNEL=80
 
 STRIDE=(1, int(2 *fe*20/1000) ) # 2ms
-n_channel=20
+n_channel=32
 
 
 #random.randint() can be
@@ -28,7 +28,7 @@ def createParams():
     Lout= int( (Lin-DILATION*(KERNEL-1) -1)/stride +1)
     maxpool= int( (Lout +1)/124)
     return {
-        '--exp_name': 'True_PDM',
+        '--exp_name': 'True_PDM_2',
         '--model': helper.utilsFunc.PDM_MODEL,
         '--num-epochs': 100,
         '--pdm_factor': pdm_factor,

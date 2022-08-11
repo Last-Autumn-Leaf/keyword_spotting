@@ -12,9 +12,6 @@ class M5(nn.Module):
             nn.MaxPool1d(4))
 
         self.second_layer= nn.Sequential(
-            #nn.BatchNorm1d(n_channel),
-            #nn.ReLU(),
-            #nn.MaxPool1d(4),
             nn.Conv1d(n_channel, n_channel, kernel_size=3),
             nn.BatchNorm1d(n_channel),
             nn.ReLU(),
