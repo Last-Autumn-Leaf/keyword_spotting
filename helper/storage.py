@@ -51,7 +51,8 @@ class Storage:
                 index += 1
 
         #weird behavior of creating a new folder
-        self.data['writer_hpram'] = SummaryWriter('hpram')
+        print('storing the hprams at',self.data['writer_path'])
+        self.data['writer_hpram'] = SummaryWriter(self.data['writer_path'])
         self.data['writer_hpram'].add_hparams(
             hparam_dict | hparam_layer,metric_dict,
             run_name=self.data['base_name']
@@ -64,6 +65,3 @@ class Storage:
 if __name__=='__main__':
 
     a=Storage()
-
-
-    print('a')
