@@ -13,7 +13,7 @@ MIN_weight_decay=MIN_LR/10
 
 pdm_factor=20
 fe=16000
-DILATION = 40
+DILATION = (21,40)
 KERNEL=80
 
 #STRIDE=(1, int(2 *fe*20/1000) ) # 2ms
@@ -23,10 +23,11 @@ n_channel=32
 
 #random.randint() can be
 def createParams():
+    global current_index
     stride=STRIDE
-
+    dilation=DILATION[current_index]
     Lin=fe*pdm_factor
-    Lout= int( (Lin-DILATION*(KERNEL-1) -1)/stride +1)
+    Lout= int( (Lin-dilation*(KERNEL-1) -1)/stride +1)
     maxpool= int( (Lout +1)/124)
     return {
         '--exp_name': 'True_PDM',
@@ -39,11 +40,12 @@ def createParams():
         '--stride': stride,
         '--n_channel': n_channel,
         '--kernel_size': KERNEL,
-        '--dilation': DILATION,
-        '--maxpool':maxpool
+        '--dilation': dilation,
+        '--maxpool':maxpool,
+        '--batch_size':10
     }
 
-PDM_search_dict= createParams()
+
 MAX_DEPTH=10
 
 def validate(depth=0):
@@ -80,8 +82,10 @@ def validate(depth=0):
 
         return True
 
-def deploy(current_index):
+def deploy():
+    global current_index
     args_list=[]
+    PDM_search_dict = createParams()
     for key in PDM_search_dict:
         args_list.append(key)
         value=PDM_search_dict[key]
@@ -93,13 +97,14 @@ def deploy(current_index):
     args_list.append(str(current_index))
     return args_list
 
+
+
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         current_index=int(sys.argv[1])
         sys.argv = [sys.argv[0]]
         args = main.argument_parser()
 
-        args=args.parse_args( deploy(current_index) )
+        args=args.parse_args( deploy() )
         print('args: ',args)
         main.main(args)
-

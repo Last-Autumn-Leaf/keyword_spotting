@@ -1,4 +1,3 @@
-import random
 
 import torch
 import torch.nn as nn
@@ -66,7 +65,8 @@ class PDM_model(nn.Module):
         kernel = torch.tensor(lowpass_filter_weights, dtype=torch.float32)[None, None]
         
         self.low_pass_kernel_size = PDM_LOW_PASS_N_TAPS
-        self.low_pass_kernel = kernel.to('cuda')
+
+        self.low_pass_kernel = kernel.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     def count_parameters(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)

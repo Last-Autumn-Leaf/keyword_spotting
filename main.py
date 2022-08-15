@@ -128,7 +128,7 @@ def main(args):
         print('Compute Canada detected, root set to',root)
     selectedDataset=SubsetSC if args.model is not PDM_MODEL else SubsetPDM
 
-    if storage['device'] == "cuda":
+    if storage['device'] == torch.device("cuda"):
         num_workers = 1
         pin_memory = True
     else:
