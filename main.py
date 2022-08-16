@@ -128,12 +128,16 @@ def main(args):
         print('Compute Canada detected, root set to',root)
     selectedDataset=SubsetSC if args.model is not PDM_MODEL else SubsetPDM
 
-    if storage['device'] == torch.device("cuda"):
+    # Note : was introducing errors so i removed it :
+    '''if storage['device'] == torch.device("cuda"):
+        torch.multiprocessing.set_start_method('spawn')
         num_workers = 1
-        pin_memory = True
+        pin_memory = False
     else:
         num_workers = 0
-        pin_memory = False
+        pin_memory = False'''
+    num_workers = 0
+    pin_memory = False
 
     if not storage['predict']: # TRAINING AND OR VALIDATION MODE
         print('Training mode')
