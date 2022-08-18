@@ -32,7 +32,7 @@ def createParams():
     return {
         '--exp_name': 'True_PDM',
         '--model': helper.utilsFunc.PDM_MODEL,
-        '--num-epochs': 100,
+        '--num-epochs': 70,
         '--pdm_factor': pdm_factor,
         '--lr': MAX_LR / 100,
         '--weight_decay': MAX_LR / 1000,
