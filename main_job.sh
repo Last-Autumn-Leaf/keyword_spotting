@@ -12,8 +12,8 @@ archiveFile="$myDir/speech_commands_v0.02.tar.gz"
 root=${SLURM_TMPDIR}
 archiveDir="$root/SpeechCommands/speech_commands_v0.02"
 
-mkdir -p $archiveDir
-tar -xf $archiveFile --directory $archiveDir
+#mkdir -p $archiveDir
+#tar -xf $archiveFile --directory $archiveDir
 
 source ~/venv/bin/activate
 python run_array_PDM.py $SLURM_ARRAY_TASK_ID
