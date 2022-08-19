@@ -130,8 +130,8 @@ def main(args):
 
     # Note : was introducing errors so i removed it :
     if storage['device'] == torch.device("cuda"):
-        torch.multiprocessing.set_start_method('spawn')
-        num_workers = 6
+        #torch.multiprocessing.set_start_method('spawn')
+        num_workers = 0
         pin_memory = False
     else:
         num_workers = 0
