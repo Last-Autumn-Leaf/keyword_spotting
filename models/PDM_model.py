@@ -1,11 +1,13 @@
+import random
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from scipy.signal import  firwin
 class PDM_model(nn.Module):
-    def __init__(self, n_input=1, n_output=35, stride=16, n_channel=32,kernel_size=100,dilation=1,maxpool=4):
+    def __init__(self, n_input=1, n_output=35, stride=16, n_channel=32,kernel_size=100,dilation=1,maxpool=4,device=torch.device('cpu')):
         super().__init__()
+        self.device=device
         self.conv1 = nn.Conv1d(n_input, n_channel, kernel_size=kernel_size, stride=stride,dilation=dilation)
         self.init_low_pass_conv1d()
 
@@ -65,8 +67,7 @@ class PDM_model(nn.Module):
         kernel = torch.tensor(lowpass_filter_weights, dtype=torch.float32)[None, None]
         
         self.low_pass_kernel_size = PDM_LOW_PASS_N_TAPS
-
-        self.low_pass_kernel = kernel.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        self.low_pass_kernel = kernel.to(self.device)
 
     def count_parameters(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
