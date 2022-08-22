@@ -11,6 +11,9 @@ class PDM_model(nn.Module):
         self.conv1 = nn.Conv1d(n_input, n_channel, kernel_size=kernel_size, stride=stride,dilation=dilation)
         self.init_low_pass_conv1d()
 
+        #self.conv2=nn.Conv1d(1,1,kernel_size=self.low_pass_kernel_size)
+        #self.conv2.weight= torch.nn.Parameter(self.low_pass_kernel,requires_grad=False)
+
         self.temp = nn.Sequential(
             nn.BatchNorm1d(n_channel),
             nn.ReLU(),)
@@ -35,10 +38,13 @@ class PDM_model(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
+        #x=x.view()
 
         batch_size, in_channels, len_input_sequence = x.shape
         low_pass_output_shape = (batch_size, in_channels, len_input_sequence-self.low_pass_kernel_size+1)
         x = F.conv1d(x.view(-1, 1, len_input_sequence), self.low_pass_kernel).view(*low_pass_output_shape)
+
+        #x=self.conv2(x)
 
         x = self.temp(x)
         x = self.max_p(x)
@@ -68,6 +74,7 @@ class PDM_model(nn.Module):
         
         self.low_pass_kernel_size = PDM_LOW_PASS_N_TAPS
         self.low_pass_kernel = kernel.to(self.device)
+        return self.low_pass_kernel
 
     def count_parameters(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)

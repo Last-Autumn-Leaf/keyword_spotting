@@ -40,7 +40,7 @@ def createParams():
         '--n_channel': n_channel,
         '--kernel_size': KERNEL,
         '--dilation': DILATION,
-        '--batch_size' : 25,
+        '--batch_size' : 2,
         '--maxpool':maxpool
     }
 
