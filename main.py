@@ -263,7 +263,7 @@ def main(args):
         waveform_size = storage['transform'](storage['waveform']).shape
         storage['model']=PDM_model( n_output=len(test_set.labels if storage['predict'] else train_set.labels),
             stride=storage['stride'],n_channel=storage['n_channel'],kernel_size=storage['kernel_size'],
-            dilation=storage['dilation'],maxpool=storage['maxpool'],device=storage['device']).to(storage['device'])
+            dilation=storage['dilation'],maxpool=storage['maxpool']).to(storage['device'])
         
         print('PDM model setup')
 
