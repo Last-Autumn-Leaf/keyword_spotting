@@ -3,18 +3,15 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from scipy.signal import  firwin
 class PDM_model(nn.Module):
-    def __init__(self, n_input=1, n_output=35, stride=16, n_channel=32,kernel_size=100,dilation=1,maxpool=4,device=torch.device('cpu')):
+    def __init__(self, n_input=1, n_output=35, stride=16, n_channel=32,kernel_size=100,dilation=1,maxpool=4):
         super().__init__()
-        self.device=device
         self.conv1 = nn.Conv1d(n_input, n_channel, kernel_size=kernel_size, stride=stride,dilation=dilation)
-        self.init_low_pass_conv1d()
-
-        #self.conv2=nn.Conv1d(1,1,kernel_size=self.low_pass_kernel_size)
-        #self.conv2.weight= torch.nn.Parameter(self.low_pass_kernel,requires_grad=False)
 
         self.temp = nn.Sequential(
+            self.getFilter(n_channel),
             nn.BatchNorm1d(n_channel),
             nn.ReLU(),)
         self.max_p=nn.MaxPool1d(maxpool)
@@ -38,14 +35,6 @@ class PDM_model(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
-        #x=x.view()
-
-        batch_size, in_channels, len_input_sequence = x.shape
-        low_pass_output_shape = (batch_size, in_channels, len_input_sequence-self.low_pass_kernel_size+1)
-        x = F.conv1d(x.view(-1, 1, len_input_sequence), self.low_pass_kernel).view(*low_pass_output_shape)
-
-        #x=self.conv2(x)
-
         x = self.temp(x)
         x = self.max_p(x)
         x = self.second_layer(x)
@@ -54,7 +43,7 @@ class PDM_model(nn.Module):
         x = self.fc1(x)
         return F.log_softmax(x, dim=2)
 
-    def init_low_pass_conv1d(self):
+    def getFilter(self,n_channel):
         WAV_SAMPLE_RATE = 16000
         PDM_FACTOR = 20
         PDM_SAMPLE_RATE = WAV_SAMPLE_RATE * PDM_FACTOR
@@ -70,11 +59,19 @@ class PDM_model(nn.Module):
         # high sharpness is likely not terribly important
         PDM_LOW_PASS_N_TAPS = 128
         lowpass_filter_weights = firwin(PDM_LOW_PASS_N_TAPS, PDM_LOW_PASS_CUTOFF_NORM, pass_zero='lowpass')
-        kernel = torch.tensor(lowpass_filter_weights, dtype=torch.float32)[None, None]
-        
-        self.low_pass_kernel_size = PDM_LOW_PASS_N_TAPS
-        self.low_pass_kernel = kernel.to(self.device)
-        return self.low_pass_kernel
+        kernel = torch.tensor(lowpass_filter_weights, dtype=torch.float32)
+
+        true_kernel = torch.zeros((n_channel, n_channel, PDM_LOW_PASS_N_TAPS))
+
+        for i in range(n_channel):
+            for j in range(n_channel):
+                true_kernel[i, j] = kernel
+
+        conv2 = torch.nn.Conv1d(n_channel, n_channel, PDM_LOW_PASS_N_TAPS)
+        conv2.weight = torch.nn.parameter.Parameter(true_kernel)
+        conv2.bias = torch.nn.parameter.Parameter(torch.zeros((n_channel)))
+        conv2.requires_grad_(False)
+        return conv2
 
     def count_parameters(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)

@@ -17,19 +17,19 @@ DILATION = 40
 KERNEL=80
 
 #STRIDE=(1, int(2 *fe*20/1000) ) # 2ms
-STRIDE=1
+STRIDE=(1,int(fe*20/1000))
 n_channel=32
 
 
 #random.randint() can be
 def createParams():
-    stride=STRIDE
+    stride= random.randint(STRIDE[0],STRIDE[1])
 
     Lin=fe*pdm_factor
     Lout= int( (Lin-DILATION*(KERNEL-1) -1)/stride +1)
     maxpool= int( (Lout +1)/124)
     return {
-        '--exp_name': 'True_PDM',
+        '--exp_name': 'True_PDM_2',
         '--model': helper.utilsFunc.PDM_MODEL,
         '--num-epochs': 70,
         '--pdm_factor': pdm_factor,
@@ -40,8 +40,8 @@ def createParams():
         '--n_channel': n_channel,
         '--kernel_size': KERNEL,
         '--dilation': DILATION,
-        '--batch_size' : 2,
-        '--maxpool':maxpool
+        '--maxpool':maxpool,
+        "--batch_size":50
     }
 
 PDM_search_dict= createParams()
