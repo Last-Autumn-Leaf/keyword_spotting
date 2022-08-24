@@ -4,11 +4,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from scipy.signal import  firwin
 class PDM_model(nn.Module):
     def __init__(self, n_input=1, n_output=35, stride=16, n_channel=32,kernel_size=100,dilation=1,maxpool=4):
         super().__init__()
         self.conv1 = nn.Conv1d(n_input, n_channel, kernel_size=kernel_size, stride=stride,dilation=dilation)
+
         self.temp = nn.Sequential(
+            self.getFilter(n_channel),
             nn.BatchNorm1d(n_channel),
             nn.ReLU(),)
         self.max_p=nn.MaxPool1d(maxpool)
@@ -39,6 +42,36 @@ class PDM_model(nn.Module):
         x = x.permute(0, 2, 1)
         x = self.fc1(x)
         return F.log_softmax(x, dim=2)
+
+    def getFilter(self,n_channel):
+        WAV_SAMPLE_RATE = 16000
+        PDM_FACTOR = 20
+        PDM_SAMPLE_RATE = WAV_SAMPLE_RATE * PDM_FACTOR
+        PDM_NYQUIST = PDM_SAMPLE_RATE / 2
+
+        PDM_LOW_PASS_CUTOFF = (WAV_SAMPLE_RATE / 2)
+        PDM_LOW_PASS_CUTOFF_NORM = PDM_LOW_PASS_CUTOFF / PDM_NYQUIST
+
+        # PDM_LOW_PASS_N_TAPS corresponds to torch.conv1d: kernel_size
+        # Note : this controls the sharpness of the low-pass filter cutoff
+        # higher value will result in sharper cutoff, but more computation.
+        # Since the majority of speech energy is typically < 4 kHz,
+        # high sharpness is likely not terribly important
+        PDM_LOW_PASS_N_TAPS = 128
+        lowpass_filter_weights = firwin(PDM_LOW_PASS_N_TAPS, PDM_LOW_PASS_CUTOFF_NORM, pass_zero='lowpass')
+        kernel = torch.tensor(lowpass_filter_weights, dtype=torch.float32)
+
+        true_kernel = torch.zeros((n_channel, n_channel, PDM_LOW_PASS_N_TAPS))
+
+        for i in range(n_channel):
+            for j in range(n_channel):
+                true_kernel[i, j] = kernel
+
+        conv2 = torch.nn.Conv1d(n_channel, n_channel, PDM_LOW_PASS_N_TAPS)
+        conv2.weight = torch.nn.parameter.Parameter(true_kernel)
+        conv2.bias = torch.nn.parameter.Parameter(torch.zeros((n_channel)))
+        conv2.requires_grad_(False)
+        return conv2
 
     def count_parameters(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
