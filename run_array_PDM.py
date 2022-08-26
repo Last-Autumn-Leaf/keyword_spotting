@@ -13,23 +13,23 @@ MIN_weight_decay=MIN_LR/10
 
 pdm_factor=20
 fe=16000
-DILATION = 20
+DILATION = 40
 KERNEL=80
 
 #STRIDE=(1, int(2 *fe*20/1000) ) # 2ms
-STRIDE=(1,int(fe*20/1000))
+STRIDE=1
 n_channel=32
 
 
 #random.randint() can be
 def createParams():
-    stride= random.randint(STRIDE[0],STRIDE[1])
+    stride= STRIDE
 
     Lin=fe*pdm_factor
     Lout= int( (Lin-DILATION*(KERNEL-1) -1)/stride +1)
     maxpool= int( (Lout +1)/124)
     return {
-        '--exp_name': 'True_PDM_3',
+        '--exp_name': 'True_PDM_4',
         '--model': helper.utilsFunc.PDM_MODEL,
         '--num-epochs': 70,
         '--pdm_factor': pdm_factor,
@@ -41,7 +41,7 @@ def createParams():
         '--kernel_size': KERNEL,
         '--dilation': DILATION,
         '--maxpool':maxpool,
-        "--batch_size":50
+        "--batch_size":2
     }
 
 PDM_search_dict= createParams()
