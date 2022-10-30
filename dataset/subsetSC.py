@@ -61,6 +61,9 @@ class SubsetSC(SPEECHCOMMANDS):
 
         return tensors, targets
 
+    def to (self,device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
+        self.device=device
+        return self
 
 
 if __name__=='__main__':

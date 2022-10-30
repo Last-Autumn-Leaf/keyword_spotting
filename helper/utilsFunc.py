@@ -13,7 +13,7 @@ import torchaudio
 #MACRO :
 
 spect_model='spect'
-M5_model='PDM_model'
+M5_model='M5'
 MFCC_MODEL= 'MFCC'
 PDM_MODEL='PDM'
 spect_MEL='mel'
